@@ -4,6 +4,7 @@ package main
 
 import (
 	"database/sql"
+	"flag"
 	"io/fs"
 	"log"
 	"net/http"
@@ -31,20 +32,37 @@ const (
 
 // main is the entry point of the application. It determines the execution mode based on command-line arguments.
 func main() {
+	// Define command-line flags.
+	background := flag.Bool("background", false, "Run the application in background (service) mode without a GUI.")
+	flag.Parse()
+
 	db, err := data.InitDB()
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 	data.NewLogger(db)
 
-	// When the application is launched by Chrome as a native messaging host,
-	// the first argument is the origin of the extension.
-	if len(os.Args) > 1 && strings.HasPrefix(os.Args[1], "chrome-extension://") {
+	// Determine the application's execution mode.
+	// 1. Background (service) mode: Started by autostart, runs silently.
+	if *background {
+		startBackgroundService(db)
+		// Keep the background service running indefinitely.
+		select {}
+	} else if len(os.Args) > 1 && strings.HasPrefix(os.Args[1], "chrome-extension://") {
 		runNativeMessagingHost(db)
 		return
+	} else {
+		startGUIApplication(db)
 	}
+}
 
-	startGUIApplication(db)
+// startBackgroundService initializes and runs the core services required for background operation.
+// This includes the API server, internal IPC server, and the daemon, without launching a GUI.
+func startBackgroundService(db *sql.DB) {
+	data.GetLogger().Println("Starting ProcGuard in background service mode...")
+	startAPIServer(db)
+	startInternalAPIServer(db)
+	startDaemonService(db)
 }
 
 // runNativeMessagingHost starts the application in native messaging host mode,

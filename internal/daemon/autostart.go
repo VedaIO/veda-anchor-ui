@@ -38,8 +38,9 @@ func EnsureAutostart() (string, error) {
 		return destPath, nil // Entry already exists and is correct.
 	}
 
-	// Set the registry value to point to the persistent executable path.
-	if err := key.SetStringValue(appName, destPath); err != nil {
+	// Set the registry value to point to the persistent executable path with the background flag.
+	// The --background flag ensures the application starts in a silent, service-like mode.
+	if err := key.SetStringValue(appName, destPath+" --background"); err != nil {
 		return destPath, fmt.Errorf("failed to set startup registry key: %w", err)
 	}
 
