@@ -21,8 +21,12 @@
     return date.toISOString();
   }
 
-  async function loadWebLogs(sinceStr: string, untilStr: string): Promise<void> {
+  async function loadWebLogs(
+    sinceStr: string,
+    untilStr: string
+  ): Promise<void> {
     let url = '/api/web-logs';
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity
     const params = new URLSearchParams();
     if (sinceStr) {
       params.append('since', sinceStr);
@@ -79,7 +83,9 @@
     }
   }
 
-  function handleDateChange(event: CustomEvent<{ since: Date | null; until: Date | null }>) {
+  function handleDateChange(
+    event: CustomEvent<{ since: Date | null; until: Date | null }>
+  ) {
     since = event.detail.since;
     until = event.detail.until;
     loadWebLogs(formatDateTime(since), formatDateTime(until));

@@ -24,7 +24,10 @@
     return date.toISOString();
   }
 
-  async function performSearch(sinceStr: string, untilStr: string): Promise<void> {
+  async function performSearch(
+    sinceStr: string,
+    untilStr: string
+  ): Promise<void> {
     let url = '/api/search?q=' + encodeURIComponent(q);
     if (sinceStr) {
       url += '&since=' + encodeURIComponent(sinceStr);
@@ -70,7 +73,9 @@
     }
   }
 
-  function handleDateChange(event: CustomEvent<{ since: Date | null; until: Date | null }>) {
+  function handleDateChange(
+    event: CustomEvent<{ since: Date | null; until: Date | null }>
+  ) {
     since = event.detail.since;
     until = event.detail.until;
     performSearch(formatDateTime(since), formatDateTime(until));
@@ -120,7 +125,8 @@
         id="q"
         placeholder="Nhập tên ứng dụng..."
         bind:value={q}
-        on:input={() => performSearch(formatDateTime(since), formatDateTime(until))}
+        on:input={() =>
+          performSearch(formatDateTime(since), formatDateTime(until))}
       />
       <button class="btn btn-danger" type="button" on:click={block}>
         Chặn mục đã chọn

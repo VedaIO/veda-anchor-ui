@@ -3,7 +3,6 @@
   import WebLeaderboard from './WebLeaderboard.svelte';
   import WebLog from './WebLog.svelte';
   import WebBlocklist from './WebBlocklist.svelte';
-  import { showToast } from './toastStore';
 
   let activeTab: 'leaderboard' | 'log' | 'blocklist' = 'leaderboard';
 
