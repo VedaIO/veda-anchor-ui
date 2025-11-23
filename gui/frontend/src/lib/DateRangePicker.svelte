@@ -10,41 +10,81 @@
 
   const dispatch = createEventDispatcher();
 
-  let inputElement: HTMLInputElement;
-  let flatpickrInstance: Instance | undefined;
+  let fromInput: HTMLInputElement;
+  let toInput: HTMLInputElement;
+  let fromInstance: Instance | undefined;
+  let toInstance: Instance | undefined;
 
-  const options: Options = {
-    mode: 'range',
+  const commonOptions: Partial<Options> = {
     enableTime: true,
     time_24hr: true,
     dateFormat: 'Y-m-d H:i',
-    defaultDate: [since, until].filter((d): d is Date => d !== null),
-    onChange: (selectedDates: Date[]) => {
-      if (selectedDates.length === 2) {
-        dispatch('change', { since: selectedDates[0], until: selectedDates[1] });
-      } else if (selectedDates.length === 0) {
-        dispatch('change', { since: null, until: null });
-      }
-    },
   };
 
   onMount(() => {
-    if (inputElement) {
-      flatpickrInstance = flatpickr(inputElement, options);
+    const fromOptions: Options = {
+      ...commonOptions,
+      defaultDate: since,
+      onChange: (selectedDates) => {
+        if (!selectedDates[0]) {
+          since = null;
+        } else {
+          since = selectedDates[0];
+          toInstance?.set('minDate', since);
+        }
+        dispatch('change', { since, until });
+      },
+    };
+
+    const toOptions: Options = {
+      ...commonOptions,
+      defaultDate: until,
+      onChange: (selectedDates) => {
+        if (!selectedDates[0]) {
+          until = null;
+        } else {
+          until = selectedDates[0];
+          fromInstance?.set('maxDate', until);
+        }
+        dispatch('change', { since, until });
+      },
+    };
+
+    if (fromInput) {
+      fromInstance = flatpickr(fromInput, fromOptions);
+    }
+    if (toInput) {
+      toInstance = flatpickr(toInput, toOptions);
     }
   });
 
   onDestroy(() => {
-    flatpickrInstance?.destroy();
+    fromInstance?.destroy();
+    toInstance?.destroy();
   });
-
-  export function clear() {
-    flatpickrInstance?.clear();
-  }
 </script>
 
-<input
-  bind:this={inputElement}
-  placeholder="Select a date and time range"
-  class="form-control"
-/>
+<div class="row g-2 align-items-center">
+  <div class="col-auto">
+    <label for="from-date-picker" class="col-form-label">Từ:</label>
+  </div>
+  <div class="col">
+    <input
+      id="from-date-picker"
+      bind:this={fromInput}
+      placeholder="Thời gian bắt đầu"
+      class="form-control"
+    />
+  </div>
+  <div class="col-auto">
+    <label for="to-date-picker" class="col-form-label">Đến:</label>
+  </div>
+  <div class="col">
+    <input
+      id="to-date-picker"
+      bind:this={toInput}
+      placeholder="End date and time"
+      class="form-control"
+    />
+  </div>
+</div>
