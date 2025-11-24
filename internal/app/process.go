@@ -256,10 +256,20 @@ func StartBlocklistEnforcer(appLogger data.Logger) {
 	}()
 }
 
+var ignoredProcesses = []string{
+	"textinputhost.exe",
+}
+
 func shouldLogProcess(p *process.Process) bool {
 	name, err := p.Name()
 	if err != nil || name == "" {
 		return false
+	}
+
+	for _, ignoredName := range ignoredProcesses {
+		if strings.EqualFold(name, ignoredName) {
+			return false
+		}
 	}
 
 	if name == "ProcGuardSvc.exe" {
