@@ -164,10 +164,11 @@ func (s *Server) handleLoadWebBlocklist(w http.ResponseWriter, r *http.Request) 
 
 // handleGetWebLogs retrieves web logs from the database within a given time range.
 func (s *Server) handleGetWebLogs(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("q")
 	sinceStr := r.URL.Query().Get("since")
 	untilStr := r.URL.Query().Get("until")
 
-	entries, err := data.GetWebLogs(s.db, sinceStr, untilStr)
+	entries, err := data.GetWebLogs(s.db, query, sinceStr, untilStr)
 	if err != nil {
 		http.Error(w, "Failed to query web logs", http.StatusInternalServerError)
 		return

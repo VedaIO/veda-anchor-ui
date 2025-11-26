@@ -12,6 +12,7 @@
     iconUrl: string;
   }
 
+  let q = '';
   let webLogItems = writable<WebLogItem[]>([]);
   let since: Date | null = null;
   let until: Date | null = new Date();
@@ -22,12 +23,16 @@
   }
 
   async function loadWebLogs(
+    query: string,
     sinceStr: string,
     untilStr: string
   ): Promise<void> {
     let url = '/api/web-logs';
     // eslint-disable-next-line svelte/prefer-svelte-reactivity
     const params = new URLSearchParams();
+    if (query) {
+      params.append('q', query);
+    }
     if (sinceStr) {
       params.append('since', sinceStr);
     }
@@ -88,7 +93,7 @@
   ) {
     since = event.detail.since;
     until = event.detail.until;
-    loadWebLogs(formatDateTime(since), formatDateTime(until));
+    loadWebLogs(q, formatDateTime(since), formatDateTime(until));
   }
 
   async function blockSelectedWebsites(): Promise<void> {
@@ -125,14 +130,23 @@
     const now = new Date();
     since = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0);
     until = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59);
-    loadWebLogs(formatDateTime(since), formatDateTime(until));
+    loadWebLogs(q, formatDateTime(since), formatDateTime(until));
   });
 </script>
 
 <div class="card mt-3">
   <div class="card-body">
     <h5 class="card-title">Lịch sử Truy cập Web</h5>
-    <div class="mb-3">
+    <div class="input-group mb-3">
+      <input
+        type="text"
+        class="form-control"
+        id="q"
+        placeholder="Nhập tên trang web..."
+        bind:value={q}
+        on:input={() =>
+          loadWebLogs(q, formatDateTime(since), formatDateTime(until))}
+      />
       <button class="btn btn-danger" on:click={blockSelectedWebsites}>
         Chặn mục đã chọn
       </button>
@@ -145,21 +159,21 @@
           <button
             type="button"
             class="btn btn-outline-secondary"
-            on:click={() => loadWebLogs('1 hour ago', 'now')}
+            on:click={() => loadWebLogs(q, '1 hour ago', 'now')}
           >
             1 giờ qua
           </button>
           <button
             type="button"
             class="btn btn-outline-secondary"
-            on:click={() => loadWebLogs('24 hours ago', 'now')}
+            on:click={() => loadWebLogs(q, '24 hours ago', 'now')}
           >
             24 giờ qua
           </button>
           <button
             type="button"
             class="btn btn-outline-secondary"
-            on:click={() => loadWebLogs('7 days ago', 'now')}
+            on:click={() => loadWebLogs(q, '7 days ago', 'now')}
           >
             7 ngày qua
           </button>

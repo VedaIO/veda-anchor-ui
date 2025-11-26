@@ -103,7 +103,7 @@
       return;
     }
 
-    showToast(`Đã chặn: ${uniqueApps.join(', ')}`, 'success');
+    showToast(`Các ứng dụng đã chọn đã được thêm vào danh sách chặn`, 'success');
     selectedApps = [];
   }
 
@@ -117,7 +117,7 @@
 
 <div class="card mt-3">
   <div class="card-body">
-    <h5 class="card-title">Tìm kiếm Log ứng dụng</h5>
+    <h5 class="card-title">Lịch sử Ứng dụng</h5>
     <div class="input-group mb-3">
       <input
         type="text"
