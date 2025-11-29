@@ -1,15 +1,13 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"procguard-wails/api"
-	"procguard-wails/internal/data"
 )
 
 // App struct
 type App struct {
-	db     *sql.DB
-	logger data.Logger
+	ctx context.Context
 	*api.Server
 }
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { currentPath, navigate } from './lib/router';
+  import Router, { wrap } from 'svelte-spa-router/wrap';
   import Welcome from './lib/Welcome.svelte';
   import AppManagement from './lib/AppManagement.svelte';
   import WebManagement from './lib/WebManagement.svelte';
@@ -15,12 +15,15 @@
     handleUninstallSubmit,
   } from './lib/modalStore';
 
-  const routes: { [key: string]: any } = {
-    '/': Welcome,
-    '/apps': AppManagement,
-    '/web': WebManagement,
-    '/settings': Settings,
-    '/login': Login,
+  const routes = {
+    // Exact path
+    '/': wrap({ asyncComponent: () => import('./lib/Welcome.svelte') }),
+    '/apps': wrap({ asyncComponent: () => import('./lib/AppManagement.svelte') }),
+    '/web': wrap({ asyncComponent: () => import('./lib/WebManagement.svelte') }),
+    '/settings': wrap({ asyncComponent: () => import('./lib/Settings.svelte') }),
+    '/login': wrap({ asyncComponent: () => import('./lib/Login.svelte') }),
+    // Catch-all for 404
+    '*': wrap({ asyncComponent: () => import('./lib/Welcome.svelte') }), // Default to Welcome
   };
 
   import { checkExtension } from './lib/extensionStore';
@@ -42,7 +45,7 @@
 
   async function handleLogout() {
     await window.go.main.App.Logout();
-    navigate('/login');
+    window.location.hash = '#/login'; // Use hash navigation
   }
 
   onMount(async () => {
@@ -50,8 +53,8 @@
     const authenticated = await window.go.main.App.GetIsAuthenticated();
     isAuthenticated.set(authenticated);
 
-    if (!authenticated && window.location.pathname !== '/login') {
-      navigate('/login');
+    if (!authenticated && window.location.hash !== '#/login') {
+      window.location.hash = '#/login'; // Use hash navigation
     }
   });
 </script>
@@ -61,8 +64,8 @@
     <div class="container-fluid">
       <a
         class="navbar-brand"
-        href="/"
-        on:click|preventDefault={() => navigate('/')}>ProcGuard</a
+        href="#/"
+        >ProcGuard</a
       >
       <button
         class="navbar-toggler"
@@ -80,15 +83,16 @@
           <li class="nav-item">
             <a
               class="nav-link"
-              href="/"
-              on:click|preventDefault={() => navigate('/')}>Trang chủ</a
+              href="#/"
+              >Trang chủ</a
             >
           </li>
           <li class="nav-item">
             <a
               class="nav-link"
-              href="/settings"
-              on:click|preventDefault={() => navigate('/settings')}>Cài đặt</a
+              href="#/settings"
+              on:click|preventDefault={() => (window.location.hash = '#/settings')}
+              >Cài đặt</a
             >
           </li>
         </ul>
@@ -105,15 +109,13 @@
       </div>
     </div>
   </nav>
-
-  <main class="container mt-4">
-    <svelte:component this={routes[currentPath]} />
-  </main>
-
-  <Toast />
-{:else}
-  <svelte:component this={routes['/login']} />
 {/if}
+
+<main class="container mt-4">
+  <Router {routes} />
+</main>
+
+<Toast />
 
 <!-- Uninstall Modal -->
 {#if isUninstallModalOpen}

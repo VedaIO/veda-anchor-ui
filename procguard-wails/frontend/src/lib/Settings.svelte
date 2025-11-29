@@ -8,46 +8,35 @@
 
   async function loadAutostartStatus(): Promise<void> {
     try {
-      const res = await fetch('/api/settings/autostart/status', {
-        cache: 'no-cache',
-      });
-      if (!res.ok) {
-        showToast('Không hỗ trợ tự động khởi động trên HĐH này', 'info');
-        autostartToggleBtnDisabled = true;
-        return;
-      }
-      const data = await res.json();
-      isAutostartEnabled = data.enabled;
-
+      // Wails call to the bound Go method
+      const enabled = await window.go.main.App.GetAutostartStatus();
+      isAutostartEnabled = enabled;
       autostartToggleBtnDisabled = false;
-    } catch {
-      showToast('Lỗi khi tải trạng thái tự động khởi động.', 'error');
+    } catch (e) {
+      // If the Go method returns an error, it will be caught here
+      showToast(
+        `Không hỗ trợ tự động khởi động trên HĐH này: ${e}`,
+        'info'
+      );
       autostartToggleBtnDisabled = true;
     }
   }
 
   async function toggleAutostart(): Promise<void> {
     autostartToggleBtnDisabled = true;
-    const endpoint = isAutostartEnabled
-      ? '/api/settings/autostart/disable'
-      : '/api/settings/autostart/enable';
     try {
-      const res = await fetch(endpoint, { method: 'POST' });
-      if (!res.ok) {
-        const errorText = await res.text();
-        showToast(`Thao tác thất bại: ${errorText}`, 'error');
+      if (isAutostartEnabled) {
+        await window.go.main.App.DisableAutostart();
+        showToast('Đã tắt tự động khởi động.', 'success');
       } else {
-        showToast(
-          isAutostartEnabled
-            ? 'Đã tắt tự động khởi động.'
-            : 'Đã bật tự động khởi động.',
-          'success'
-        );
-        loadAutostartStatus(); // Refresh status after action
+        await window.go.main.App.EnableAutostart();
+        showToast('Đã bật tự động khởi động.', 'success');
       }
+      // Refresh status after action
+      await loadAutostartStatus();
     } catch (e) {
       showToast(
-        `Đã xảy ra lỗi: ${e instanceof Error ? e.message : 'Unknown error'}`,
+        `Thao tác thất bại: ${e instanceof Error ? e.message : e}`,
         'error'
       );
     } finally {

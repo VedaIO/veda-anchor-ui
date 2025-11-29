@@ -18,16 +18,15 @@ var assets embed.FS
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
+	a.ctx = ctx
 	db, err := data.InitDB()
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
-	a.db = db
 	data.NewLogger(db)
-	a.logger = data.GetLogger()
 	a.Server = api.NewServer(db)
 
-	daemon.StartDaemon(a.logger, a.db)
+	daemon.StartDaemon(a.Server.Logger, db)
 }
 
 func main() {

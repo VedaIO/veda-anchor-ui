@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { writable } from 'svelte/store';
-  import { navigate } from './router';
   import { isAuthenticated } from './authStore';
 
   let hasPassword = false;
@@ -32,9 +31,8 @@
         // On successful login, we update the shared `isAuthenticated` store.
         // This will cause other components (like App.svelte) to reactively update.
         isAuthenticated.set(true);
-        // We then use the client-side router to navigate to the home page
-        // without a full page reload, providing a smoother user experience.
-        navigate('/');
+        // We then use hash-based navigation to go to the home page.
+        window.location.hash = '#/';
       } else {
         errorMessage.set('Sai mật khẩu');
       }
@@ -60,7 +58,7 @@
       await window.go.main.App.SetPassword(newPassword);
       // Just like in handleLogin, we update the shared store and navigate.
       isAuthenticated.set(true);
-      navigate('/');
+      window.location.hash = '#/';
     } catch (error) {
       errorMessage.set('Lỗi đặt mật khẩu');
     }

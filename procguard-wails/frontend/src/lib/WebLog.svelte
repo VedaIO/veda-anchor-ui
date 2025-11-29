@@ -19,6 +19,7 @@
 
   function formatDateTime(date: Date | null): string {
     if (!date) return '';
+    // Wails works well with standard string formats for time
     return date.toISOString();
   }
 
@@ -27,63 +28,55 @@
     sinceStr: string,
     untilStr: string
   ): Promise<void> {
-    let url = '/api/web-logs';
-    // eslint-disable-next-line svelte/prefer-svelte-reactivity
-    const params = new URLSearchParams();
-    if (query) {
-      params.append('q', query);
-    }
-    if (sinceStr) {
-      params.append('since', sinceStr);
-    }
-    if (untilStr) {
-      params.append('until', untilStr);
-    }
-    const queryString = params.toString();
-    if (queryString) {
-      url += `?${queryString}`;
-    }
-
-    const res = await fetch(url);
-    const data = await res.json();
-    if (data && data.length > 0) {
-      const items: WebLogItem[] = await Promise.all(
-        data.map(async (l: string[]) => {
-          const urlString = l[1];
-          let domain = '';
-          try {
-            const url = new URL(urlString);
-            domain = url.hostname;
-          } catch {
-            // Ignore invalid URLs
-          }
-
-          let title = '';
-          let iconUrl = '';
-          if (domain) {
-            const webDetailsRes = await fetch(
-              `/api/web-details?domain=${encodeURIComponent(domain)}`
-            );
-            if (webDetailsRes.ok) {
-              const webDetails = await webDetailsRes.json();
-              title = webDetails.title;
-              iconUrl = webDetails.iconUrl;
-            }
-          }
-
-          const timestamp = l[0];
-
-          return {
-            timestamp,
-            url: urlString,
-            domain,
-            title,
-            iconUrl,
-          };
-        })
+    try {
+      const data = await window.go.main.App.GetWebLogs(
+        query,
+        sinceStr,
+        untilStr
       );
-      webLogItems.set(items);
-    } else {
+      if (data && data.length > 0) {
+        const items: WebLogItem[] = await Promise.all(
+          data.map(async (l: string[]) => {
+            const urlString = l[1];
+            let domain = '';
+            try {
+              const url = new URL(urlString);
+              domain = url.hostname;
+            } catch {
+              // Ignore invalid URLs
+            }
+
+            let title = '';
+            let iconUrl = '';
+            if (domain) {
+              try {
+                const webDetails = await window.go.main.App.GetWebDetails(
+                  domain
+                );
+                title = webDetails.title;
+                iconUrl = webDetails.iconUrl;
+              } catch (error) {
+                console.error('Error getting web details:', error);
+              }
+            }
+
+            const timestamp = l[0];
+
+            return {
+              timestamp,
+              url: urlString,
+              domain,
+              title,
+              iconUrl,
+            };
+          })
+        );
+        webLogItems.set(items);
+      } else {
+        webLogItems.set([]);
+      }
+    } catch (error) {
+      showToast(`Lỗi tải lịch sử web: ${error}`, 'error');
       webLogItems.set([]);
     }
   }
@@ -107,23 +100,22 @@
 
     const uniqueDomains = [...new Set(selectedDomains)];
 
-    for (const domain of uniqueDomains) {
-      await fetch('/api/web-blocklist/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ domain: domain }),
-      });
+    try {
+      for (const domain of uniqueDomains) {
+        await window.go.main.App.AddWebBlocklist(domain);
+      }
+      showToast(
+        'Các trang web đã chọn đã được thêm vào danh sách chặn.',
+        'success'
+      );
+      (
+        document.querySelectorAll(
+          'input[name="web-log-domain"]:checked'
+        ) as NodeListOf<HTMLInputElement>
+      ).forEach((cb) => (cb.checked = false));
+    } catch (error) {
+      showToast(`Lỗi chặn trang web: ${error}`, 'error');
     }
-
-    showToast(
-      'Các trang web đã chọn đã được thêm vào danh sách chặn.',
-      'success'
-    );
-    (
-      document.querySelectorAll(
-        'input[name="web-log-domain"]:checked'
-      ) as NodeListOf<HTMLInputElement>
-    ).forEach((cb) => (cb.checked = false));
   }
 
   onMount(() => {

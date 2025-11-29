@@ -11,7 +11,11 @@ all: build
 
 build:
 	@echo "Building ProcGuard for windows..."
-	export PATH=$(shell $(GO_CMD) env GOPATH)/bin:$$PATH && cd procguard-wails && wails build -platform windows/amd64 -ldflags="-X main.version=$(VERSION)"
+	cd procguard-wails && wails build -platform windows/amd64 -ldflags="-X main.version=$(VERSION)"
+
+build-debug:
+	@echo "Building ProcGuard for windows..."
+	cd procguard-wails && wails build -platform windows/amd64 -debug
 
 fmt:
 	@echo "Formatting code..."
@@ -21,3 +25,5 @@ fmt:
 clean:
 	@echo "Cleaning..."
 	rm -rf procguard-wails/build/bin
+	rm -rf procguard-wails/frontend/dist
+	rm -rf procguard-wails/frontend/wailsjs
