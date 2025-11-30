@@ -64,7 +64,7 @@ func InstallNativeHost(exePath, extensionId string) error {
 		// Set the default value of the registry key to the path of the manifest file.
 		if err := k.SetStringValue("", manifestPath); err != nil {
 			log.Printf("Failed to set registry key value for %s: %v", keyPath, err)
-			k.Close()
+			_ = k.Close()
 			continue
 		}
 
