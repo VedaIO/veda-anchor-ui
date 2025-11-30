@@ -26,11 +26,13 @@
             type="button"
             class="btn btn-primary"
             id="install-extension-btn-web"
-            on:click={() =>
-              window.open(
-                'https://chromewebstore.google.com/detail/procguard-web-monitor/hkanepohpflociaodcicmmfbdaohpceo',
-                '_blank'
-              )}>Tải tiện ích</button
+            on:click={async () => {
+              try {
+                await window.go.main.App.OpenBrowser('https://chromewebstore.google.com/detail/procguard-web-monitor/hkanepohpflociaodcicmmfbdaohpceo');
+              } catch (err) {
+                console.error('Failed to open browser:', err);
+              }
+            }}>Tải tiện ích</button
           >
           <button
             class="btn btn-secondary"

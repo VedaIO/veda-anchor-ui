@@ -1,11 +1,16 @@
 // TypeScript declarations for Wails runtime
 declare global {
   interface Window {
+    runtime?: {
+      BrowserOpenURL(url: string): void;
+    };
     go: {
       main: {
         App: {
           AddWebBlocklist(arg1: string): Promise<void>;
           BlockApps(arg1: Array<string>): Promise<void>;
+          CheckChromeExtension(): Promise<boolean>;
+          OpenBrowser(url: string): Promise<void>;
           ClearAppBlocklist(): Promise<void>;
           ClearWebBlocklist(): Promise<void>;
           DisableAutostart(): Promise<void>;
@@ -43,4 +48,4 @@ declare global {
   }
 }
 
-export {};
+export { };

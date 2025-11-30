@@ -18,6 +18,9 @@ function connect() {
       isPortConnected = false;
       if (chrome.runtime.lastError) {
       }
+      // Retry native messaging connection after 5 seconds
+      // This reconnection interval allows the extension to resume functionality quickly
+      // if ProcGuard daemon restarts or connection is lost
       setTimeout(connect, 5000);
     });
 
@@ -25,7 +28,7 @@ function connect() {
     port.postMessage({ type: 'get_web_blocklist' });
   } catch (err) {
     isPortConnected = false;
-    // Still try to reconnect
+    // Retry connection if initial connect fails (e.g. daemon not running yet)
     setTimeout(connect, 5000);
   }
 }

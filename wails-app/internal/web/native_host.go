@@ -77,6 +77,7 @@ func CreateManifest(manifestPath, exePath, extensionId string) error {
 		"type":        "stdio",
 		"allowed_origins": []string{
 			"chrome-extension://" + extensionId + "/",
+			"chrome-extension://gpaafgcbiejjpfdgmjglehboafdicdjb/", // Dev Extension ID
 		},
 	}
 

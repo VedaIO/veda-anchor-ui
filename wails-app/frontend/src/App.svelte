@@ -23,8 +23,12 @@
     '/login': Login,
   };
 
-  import { checkExtension } from './lib/extensionStore';
+  import { checkExtension, setupExtensionListener } from './lib/extensionStore';
 
+  /**
+   * Handle stopping the ProcGuard daemon completely
+   * This is different from just closing the window - it stops background monitoring
+   */
   async function handleStop() {
     if (confirm('Bạn có chắc chắn muốn dừng ProcGuard không?')) {
       try {
@@ -37,11 +41,42 @@
     }
   }
 
+  /**
+   * Handle user logout
+   * Calls backend Logout method then navigates to login page
+   * CRITICAL: Must call backend first to clear session, then update frontend state
+   */
+  async function handleLogout() {
+    try {
+      // Call backend to clear authentication session
+      await window.go.main.App.Logout();
+      // Update frontend state
+      isAuthenticated.set(false);
+      // Navigate to login page using hash routing
+      navigate('/login');
+    } catch (error) {
+      console.error('Lỗi khi đăng xuất:', error);
+      alert('Đã có lỗi xảy ra khi đăng xuất.');
+    }
+  }
+
+  /**
+   * Check authentication status and extension on mount
+   * Extension check has been moved to only run once on startup
+   * to avoid repeatedly calling ShowWindow() which brings window to front
+   */
   onMount(async () => {
+    // Setup event listener for extension connection
+    setupExtensionListener();
+    
+    // Check extension status (starts polling if not found)
     checkExtension();
+    
+    // Check if user is authenticated
     const authenticated = await window.go.main.App.GetIsAuthenticated();
     isAuthenticated.set(authenticated);
 
+    // Redirect to login if not authenticated
     if (!$isAuthenticated && $currentPath !== '/login') {
       navigate('/login');
     }
@@ -91,7 +126,10 @@
             >
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/logout">Đăng xuất</a>
+            <!-- Logout button - uses handleLogout() instead of href to properly clear session -->
+            <button class="nav-link btn" on:click={handleLogout}
+              >Đăng xuất</button
+            >
           </li>
         </ul>
       </div>

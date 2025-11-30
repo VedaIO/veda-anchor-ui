@@ -1,11 +1,9 @@
 package web
 
 import (
-	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"io"
-	"net/http"
 	"os"
 	"reflect"
 	"strings"
@@ -16,7 +14,6 @@ import (
 const (
 	// pollInterval is the interval at which the web blocklist is polled for changes.
 	pollInterval = 500 * time.Millisecond
-	internalAPI  = "http://127.0.0.1:58142"
 )
 
 // WebMetadataPayload is the payload for the log_web_metadata message from the extension.
@@ -46,6 +43,14 @@ func Run() {
 	go pollWebBlocklist()
 
 	// The main loop reads messages from stdin, which is connected to the browser extension.
+	// CRITICAL: We must check if Stdin is actually a pipe (connected to Chrome).
+	// If we run this when launched by user (double-click), Stdin is invalid and we get infinite loop errors.
+	stat, _ := os.Stdin.Stat()
+	if (stat.Mode() & os.ModeCharDevice) != 0 {
+		log.Println("Stdin is a terminal, not a pipe. Skipping native messaging host.")
+		return
+	}
+
 	for {
 		// The native messaging protocol prefixes each message with its length in bytes.
 		var length uint32
@@ -54,8 +59,10 @@ func Run() {
 				log.Println("EOF received, exiting native messaging host.")
 				break // Exit loop on EOF
 			}
-			log.Printf("Error reading message length: %v", err)
-			continue
+			// If we get an error here, it likely means Stdin is closed or invalid.
+			// We should exit the loop to avoid spamming logs.
+			log.Printf("Error reading message length: %v. Exiting native messaging loop.", err)
+			break
 		}
 
 		msg := make([]byte, length)
@@ -94,18 +101,8 @@ func Run() {
 				continue
 			}
 
-			// Send the URL to the internal API
-			go func(u string) {
-				jsonData, _ := json.Marshal(map[string]string{"url": u})
-				resp, err := http.Post(internalAPI+"/log-web-event", "application/json", bytes.NewBuffer(jsonData))
-				if err != nil {
-					log.Printf("Failed to send web event to internal API: %v", err)
-					return
-				}
-				if err := resp.Body.Close(); err != nil {
-					log.Printf("Failed to close response body: %v", err)
-				}
-			}(url)
+			// Log the URL directly to the database
+			data.EnqueueWrite("INSERT INTO web_events (url, timestamp) VALUES (?, ?)", url, time.Now().Unix())
 
 		case "log_web_metadata":
 			var payload WebMetadataPayload
@@ -113,17 +110,11 @@ func Run() {
 				log.Printf("Error unmarshalling log_web_metadata payload: %v", err)
 				continue
 			}
-			go func(p WebMetadataPayload) {
-				jsonData, _ := json.Marshal(p)
-				resp, err := http.Post(internalAPI+"/log-web-metadata", "application/json", bytes.NewBuffer(jsonData))
-				if err != nil {
-					log.Printf("Failed to send web metadata to internal API: %v", err)
-					return
-				}
-				if err := resp.Body.Close(); err != nil {
-					log.Printf("Failed to close response body: %v", err)
-				}
-			}(payload)
+			
+			// Log metadata directly to the database
+			data.EnqueueWrite("INSERT OR REPLACE INTO web_metadata (domain, title, icon_url, timestamp) VALUES (?, ?, ?, ?)", 
+				payload.Domain, payload.Title, payload.IconURL, time.Now().Unix())
+
 		case "get_web_blocklist":
 			list, err := data.LoadWebBlocklist()
 			if err != nil {
@@ -158,22 +149,11 @@ func pollWebBlocklist() {
 	defer ticker.Stop()
 
 	for range ticker.C {
-		resp, err := http.Get(internalAPI + "/get-web-blocklist")
+		// Load blocklist directly from data package
+		list, err := data.LoadWebBlocklist()
 		if err != nil {
-			log.Printf("Failed to get web blocklist from internal API: %v", err)
+			log.Printf("Failed to get web blocklist: %v", err)
 			continue
-		}
-
-		var list []string
-		if err := json.NewDecoder(resp.Body).Decode(&list); err != nil {
-			log.Printf("Failed to decode web blocklist from internal API: %v", err)
-			if err := resp.Body.Close(); err != nil {
-				log.Printf("Failed to close response body: %v", err)
-			}
-			continue
-		}
-		if err := resp.Body.Close(); err != nil {
-			log.Printf("Failed to close response body: %v", err)
 		}
 
 		// Only send an update if the blocklist has changed.

@@ -2,57 +2,66 @@ import { writable } from 'svelte/store';
 
 export const isExtensionInstalled = writable<boolean | null>(null);
 
-export function checkExtension(): void {
-  // If we already have a definitive answer, don't re-run.
-  let installed = null;
-  isExtensionInstalled.subscribe((val) => (installed = val))();
-  if (installed !== null) {
-    return;
-  }
+let pollingInterval: any;
 
-  const observer = new MutationObserver((mutations, obs) => {
-    const idDiv = document.getElementById('procguard-extension-id');
-    if (idDiv && idDiv.textContent) {
-      const extensionId = idDiv.textContent;
+export async function checkExtension(): Promise<void> {
+  // Initial check
+  await performCheck();
+
+  // Start polling if not installed
+  // This handles the case where the extension connects later (Native Messaging)
+  if (pollingInterval) clearInterval(pollingInterval);
+  pollingInterval = setInterval(async () => {
+    const installed = await performCheck();
+    if (installed) {
+      clearInterval(pollingInterval);
+    }
+  }, 2000); // Check every 2 seconds
+}
+
+async function performCheck(): Promise<boolean> {
+  try {
+    // Use Wails backend method to check if extension is installed
+    const installed = await window.go.main.App.CheckChromeExtension();
+    console.log('Extension check result:', installed);
+
+    if (installed) {
+      isExtensionInstalled.set(true);
+
+      // Register with backend
+      // We register both the Store ID and the Dev ID to be safe
+      const storeExtensionId = 'hkanepohpflociaodcicmmfbdaohpceo';
+      const devExtensionId = 'gpaafgcbiejjpfdgmjglehboafdicdjb';
 
       try {
-        chrome.runtime.sendMessage(
-          extensionId,
-          { message: 'is_installed' },
-          (response) => {
-            if (chrome.runtime.lastError) {
-              isExtensionInstalled.set(false);
-            } else {
-              if (response && response.status === 'installed') {
-                isExtensionInstalled.set(true);
-                // Register the extension with the backend
-                window.go.main.App.RegisterExtension(extensionId).catch((err) =>
-                  console.error('Failed to register extension:', err)
-                );
-              }
-            }
-          }
-        );
-      } catch {
-        isExtensionInstalled.set(false);
+        await window.go.main.App.RegisterExtension(storeExtensionId);
+        await window.go.main.App.RegisterExtension(devExtensionId);
+        console.log('Extensions registered with backend');
+      } catch (err) {
+        console.error('Failed to register extension:', err);
       }
-      obs.disconnect();
-      return;
-    }
-  });
-
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-  });
-
-  // Stop observing after a timeout if the div is not found.
-  setTimeout(() => {
-    observer.disconnect();
-    let installed_timeout = null;
-    isExtensionInstalled.subscribe((val) => (installed_timeout = val))();
-    if (installed_timeout === null) {
+      return true;
+    } else {
       isExtensionInstalled.set(false);
+      return false;
     }
-  }, 1000); // Shorten timeout to 1 second
+  } catch (error) {
+    console.error('Error checking extension:', error);
+    isExtensionInstalled.set(false);
+    return false;
+  }
+}
+
+// Listen for extension connection event from backend
+// We expose this setup function to be called from onMount
+export function setupExtensionListener() {
+  if (window.runtime) {
+    window.runtime.EventsOn('extension_connected', (connected: boolean) => {
+      console.log('Extension connected event received:', connected);
+      if (connected) {
+        isExtensionInstalled.set(true);
+        if (pollingInterval) clearInterval(pollingInterval);
+      }
+    });
+  }
 }
