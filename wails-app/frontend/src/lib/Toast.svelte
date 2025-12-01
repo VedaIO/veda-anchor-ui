@@ -17,7 +17,7 @@
   });
 </script>
 
-<div class="toast-container position-fixed top-0 end-0 p-3">
+<div class="toast-container position-fixed end-0 p-3" style="top: 100px;">
   <div
     bind:this={toastElement}
     class="toast"
@@ -35,12 +35,15 @@
         <strong class="me-auto">Thông báo</strong>
         <button
           type="button"
-          class="btn-close btn-close-white"
+          class="btn-close"
           data-bs-dismiss="toast"
           aria-label="Close"
         ></button>
       </div>
-      <div class="toast-body">
+      <div
+        class="toast-body"
+        style="background-color: white; color: black; border-bottom-left-radius: 0.375rem; border-bottom-right-radius: 0.375rem;"
+      >
         {$toast.message}
       </div>
     {/if}
