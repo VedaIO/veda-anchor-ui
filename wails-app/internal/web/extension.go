@@ -4,7 +4,15 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"wails-app/internal/platform/nativehost"
 )
+
+// EnsureExtensionInstalled checks if the extension is installed and installs it if not.
+func EnsureExtensionInstalled() error {
+	// Extension ID for the Chrome Web Store version
+	const extensionId = "hkanepohpflociaodcicmmfbdaohpceo"
+	return nativehost.RegisterExtension(extensionId)
+}
 
 // CheckChromeExtension checks if the ProcGuard Chrome extension is installed
 // by looking for it in Chrome's extensions directory on the filesystem

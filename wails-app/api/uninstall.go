@@ -12,8 +12,8 @@ import (
 	"syscall"
 	"time"
 	"wails-app/internal/auth"
-	"wails-app/internal/daemon"
 	"wails-app/internal/data"
+	"wails-app/internal/platform/autostart"
 
 	"github.com/shirou/gopsutil/v3/process"
 	"golang.org/x/sys/windows/registry"
@@ -51,7 +51,7 @@ func (s *Server) Uninstall(password string) error {
 		}
 
 		// Perform other cleanup tasks.
-		if err := daemon.RemoveAutostart(); err != nil {
+		if err := autostart.RemoveAutostart(); err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to remove autostart: %v\n", err)
 		}
 		if err := removeNativeHost(); err != nil {

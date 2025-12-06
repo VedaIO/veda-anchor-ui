@@ -1,8 +1,8 @@
 package api
 
 import (
-	"wails-app/internal/daemon"
 	"wails-app/internal/data"
+	"wails-app/internal/platform/autostart"
 )
 
 // GetAutostartStatus returns the current status of the autostart setting.
@@ -16,11 +16,11 @@ func (s *Server) GetAutostartStatus() (bool, error) {
 
 // EnableAutostart enables the autostart feature for the application.
 func (s *Server) EnableAutostart() error {
-	_, err := daemon.EnsureAutostart()
+	_, err := autostart.EnsureAutostart()
 	return err
 }
 
 // DisableAutostart disables the autostart feature for the application.
 func (s *Server) DisableAutostart() error {
-	return daemon.RemoveAutostart()
+	return autostart.RemoveAutostart()
 }

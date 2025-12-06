@@ -14,6 +14,7 @@ import (
 	"wails-app/api"
 	"wails-app/internal/daemon"
 	"wails-app/internal/data"
+	"wails-app/internal/platform/nativehost"
 	"wails-app/internal/web"
 )
 
@@ -27,7 +28,6 @@ var assets embed.FS
 // The context is saved so we can call runtime methods (WindowShow, etc.) later
 //
 // Responsibilities:
-//  0. Protect ProcGuard from unauthorized termination
 //  1. Save the Wails runtime context for later use
 //  2. Initialize the database
 //  3. Initialize the logger
@@ -53,15 +53,15 @@ func (a *App) startup(ctx context.Context) {
 
 	// Start the background daemon that monitors processes and web activity
 	// This runs independently of the GUI - continues even when window is hidden
-	daemon.StartDaemon(a.Logger, db)
+	daemon.Start(a.Logger, db)
 
 	// Ensure Native Messaging Host is registered
 	// This creates the registry key and manifest file so Chrome can find us
 	// We do this on every startup to ensure the config is correct
-	if err := web.RegisterExtension("hkanepohpflociaodcicmmfbdaohpceo"); err != nil {
+	if err := nativehost.RegisterExtension("hkanepohpflociaodcicmmfbdaohpceo"); err != nil {
 		log.Printf("Failed to register Store extension: %v", err)
 	}
-	if err := web.RegisterExtension("gpaafgcbiejjpfdgmjglehboafdicdjb"); err != nil {
+	if err := nativehost.RegisterExtension("gpaafgcbiejjpfdgmjglehboafdicdjb"); err != nil {
 		log.Printf("Failed to register Dev extension: %v", err)
 	}
 }

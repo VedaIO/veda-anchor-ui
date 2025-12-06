@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"sync"
 	"wails-app/internal/data"
-	"wails-app/internal/web"
+	"wails-app/internal/platform/nativehost"
 )
 
 // Server holds the dependencies for the API server, such as the database connection and the logger.
@@ -60,5 +60,5 @@ func (s *Server) GetWebDetails(domain string) (data.WebMetadata, error) {
 
 // RegisterExtension handles the registration of the browser extension.
 func (s *Server) RegisterExtension(id string) error {
-	return web.RegisterExtension(id)
+	return nativehost.RegisterExtension(id)
 }

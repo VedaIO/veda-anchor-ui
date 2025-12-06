@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strings"
 	"time"
+	"wails-app/internal/platform/blocklistlock"
 )
 
 const appBlocklistFile = "blocklist.json"
@@ -101,7 +102,7 @@ func SaveAppBlocklist(list []string) error {
 	}
 
 	// Apply platform-specific file locking to prevent unauthorized modification.
-	return platformLock(p) // build-tag dispatch
+	return blocklistlock.PlatformLock(p) // build-tag dispatch
 }
 
 // AddAppToBlocklist adds a program to the blocklist if it's not already there.
