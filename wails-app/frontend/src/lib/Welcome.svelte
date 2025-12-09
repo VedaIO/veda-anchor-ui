@@ -99,8 +99,8 @@
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="card-title mb-0">
-          <i class="bi bi-clock-history me-2"></i>Các ứng dụng sử dụng nhiều
-          nhất hôm nay
+          <i class="bi bi-clock-history me-2"></i>Thời gian sử dụng ứng dụng hôm
+          nay
         </h5>
         <span class="badge fs-6 text-black" style="background-color: #f76f53;"
           >{formatDuration(totalScreenTime)}</span
@@ -141,9 +141,7 @@
           {/each}
         </div>
       {:else}
-        <p class="text-muted mb-0">
-          Chưa có dữ liệu thời gian sử dụng. Hãy tiếp tục sử dụng ứng dụng!
-        </p>
+        <p class="text-muted mb-0">Chưa có dữ liệu thời gian sử dụng.</p>
       {/if}
     </div>
   </div>
