@@ -10,3 +10,20 @@ ProcGuard is a Windows-based tool for monitoring and controlling processes and w
 - **Website Blocking:** Block any website from being accessed.
 - **Web-based GUI:** A simple and intuitive web interface to view logs and manage blocklists.
 - **Browser Extension:** A Chrome extension for web monitoring and blocking.
+
+### How to build
+
+1. Pre-exquisites: All the packages in flake.nix (best use direnv) and wails cli.
+
+Install wails cli:
+
+```bash
+go install github.com/wailsapp/wails/v2/cmd/wails@latest
+```
+
+2. Build the app:
+
+```bash
+cd wails-app
+make build
+```
