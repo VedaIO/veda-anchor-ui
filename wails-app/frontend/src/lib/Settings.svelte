@@ -100,7 +100,8 @@
           </p>
           <div class="alert alert-info py-2 small mb-3">
             <i class="bi bi-info-circle me-1"></i>
-            Lưu ý: Một số ứng dụng chạy ngầm (như trình duyệt) có thể cần khởi động lại để được ghi nhận lại ngay sau khi xóa.
+            Lưu ý: Một số ứng dụng chạy ngầm (như trình duyệt) có thể cần khởi động
+            lại để được ghi nhận lại ngay sau khi xóa.
           </div>
           <div class="d-flex gap-2">
             <button class="btn btn-warning" on:click={clearAppHistory}>
