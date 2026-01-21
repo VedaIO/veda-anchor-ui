@@ -31,3 +31,4 @@ clean:
 	rm -rf build/bin
 	rm -rf frontend/dist
 	rm -rf frontend/wailsjs
+	rm -rf frontend/package.json.md5

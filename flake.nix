@@ -22,6 +22,7 @@
         go env -w GOPATH=$HOME/.local/share/go
         export PATH="$HOME/.local/bin:$PATH"
         export PATH="$HOME/.local/share/go/bin:$PATH"
+        export ZIG_GLOBAL_CACHE_DIR="/tmp"
       '';
     };
   };

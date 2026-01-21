@@ -9,10 +9,9 @@ frontend/dist/
 .idea/
 .vscode/
 
-# Node
+# Frontend
 node_modules/
-npm-debug.log
-
+package.json.md5
 # Flake
 
 .direnv/
