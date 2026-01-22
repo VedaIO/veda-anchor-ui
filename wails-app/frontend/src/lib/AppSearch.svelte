@@ -1,11 +1,11 @@
 <script lang="ts">
 import { onMount } from 'svelte';
 import { writable } from 'svelte/store';
+import DateRangePicker from './DateRangePicker.svelte';
 import SearchResultItem from './SearchResultItem.svelte';
 import { showToast } from './toastStore';
-import DateRangePicker from './DateRangePicker.svelte';
 
-interface SearchResultItem {
+interface SearchResultData {
   processName: string;
   exePath: string;
   commercialName: string;
@@ -14,7 +14,7 @@ interface SearchResultItem {
 }
 
 let q = '';
-let searchResults = writable<SearchResultItem[]>([]);
+let searchResults = writable<SearchResultData[]>([]);
 let selectedApps: string[] = [];
 let since: Date | null = null;
 let until: Date | null = new Date();
@@ -33,7 +33,7 @@ async function performSearch(
     const data = await window.go.main.App.Search(q, sinceStr, untilStr);
     console.log('App search data received:', data);
     if (data && data.length > 0) {
-      const items: SearchResultItem[] = await Promise.all(
+      const items: SearchResultData[] = await Promise.all(
         data.map(async (l: string[]) => {
           const processName = l[1];
           const exePath = l[4]; // exe_path is the 5th element

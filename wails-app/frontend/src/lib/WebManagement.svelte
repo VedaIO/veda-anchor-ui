@@ -1,8 +1,8 @@
 <script lang="ts">
 import { isExtensionInstalled } from './extensionStore';
+import WebBlocklist from './WebBlocklist.svelte';
 import WebLeaderboard from './WebLeaderboard.svelte';
 import WebLog from './WebLog.svelte';
-import WebBlocklist from './WebBlocklist.svelte';
 
 let activeTab: 'leaderboard' | 'log' | 'blocklist' = 'leaderboard';
 

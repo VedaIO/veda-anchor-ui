@@ -1,21 +1,21 @@
 <script lang="ts">
-import { currentPath, navigate } from './lib/router';
-import Welcome from './lib/Welcome.svelte';
-import AppManagement from './lib/AppManagement.svelte';
-import WebManagement from './lib/WebManagement.svelte';
-import Settings from './lib/Settings.svelte';
-import Login from './lib/Login.svelte';
 import { onMount } from 'svelte';
+import AppManagement from './lib/AppManagement.svelte';
 import { isAuthenticated } from './lib/authStore';
-import Toast from './lib/Toast.svelte';
 import GlobalTitleBar from './lib/GlobalTitleBar.svelte';
+import Login from './lib/Login.svelte';
 import {
-  isConfirmModalOpen,
-  confirmModalPassword,
   confirmModalError,
+  confirmModalPassword,
   confirmModalTitle,
   handleConfirmSubmit,
+  isConfirmModalOpen,
 } from './lib/modalStore';
+import { currentPath, navigate } from './lib/router';
+import Settings from './lib/Settings.svelte';
+import Toast from './lib/Toast.svelte';
+import WebManagement from './lib/WebManagement.svelte';
+import Welcome from './lib/Welcome.svelte';
 
 const routes: { [key: string]: any } = {
   '/': Welcome,

@@ -1,8 +1,8 @@
 <script lang="ts">
 import { onMount } from 'svelte';
 import { writable } from 'svelte/store';
-import { showToast } from './toastStore';
 import DateRangePicker from './DateRangePicker.svelte';
+import { showToast } from './toastStore';
 
 interface WebLogItem {
   timestamp: string;
@@ -111,7 +111,9 @@ async function blockSelectedWebsites(): Promise<void> {
       document.querySelectorAll(
         'input[name="web-log-domain"]:checked',
       ) as NodeListOf<HTMLInputElement>
-    ).forEach((cb) => (cb.checked = false));
+    ).forEach((cb) => {
+      cb.checked = false;
+    });
   } catch (error) {
     console.error('Error blocking websites:', error);
     showToast('Lỗi khi chặn trang web.', 'error');

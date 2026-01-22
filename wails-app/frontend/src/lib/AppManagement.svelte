@@ -1,11 +1,10 @@
 <script lang="ts">
 import { onMount } from 'svelte';
+import AppBlocklist from './AppBlocklist.svelte';
 import AppLeaderboard from './AppLeaderboard.svelte';
 import AppSearch from './AppSearch.svelte';
-import AppBlocklist from './AppBlocklist.svelte';
 
 let activeTab: 'leaderboard' | 'search' | 'blocklist' = 'leaderboard';
-
 function showSubView(view: 'leaderboard' | 'search' | 'blocklist') {
   activeTab = view;
 }

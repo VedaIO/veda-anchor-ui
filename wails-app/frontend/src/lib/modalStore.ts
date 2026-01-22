@@ -1,4 +1,4 @@
-import { writable, get } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 import { showToast } from './toastStore';
 
 export type ConfirmAction = 'uninstall' | 'clearAppHistory' | 'clearWebHistory';

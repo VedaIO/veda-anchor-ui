@@ -1,8 +1,8 @@
 <script lang="ts">
 import { onMount } from 'svelte';
 import { writable } from 'svelte/store';
-import { navigate } from './router';
 import { isAuthenticated } from './authStore';
+import { navigate } from './router';
 
 let hasPassword = false;
 let errorMessage = writable('');

@@ -1,7 +1,7 @@
 <script lang="ts">
+import { Toast } from 'bootstrap';
 import { onMount } from 'svelte';
 import { toast } from './toastStore';
-import { Toast } from 'bootstrap';
 
 let toastElement: HTMLElement;
 let toastInstance: Toast;
