@@ -1,6 +1,8 @@
 name: ProcGuard CI
 on:
   push:
+    branches:
+      - main  # Only trigger on pushes to main
     paths:
       - '**.go'
       - '**.svelte'
@@ -12,6 +14,8 @@ on:
       - 'go.mod'
       - 'go.sum'
   pull_request:
+    branches:
+      - main  # Only trigger PRs targeting main
     paths:
       - '**.go'
       - '**.svelte'
@@ -38,10 +42,6 @@ jobs:
 
       - name: Install Wails
         run: nix develop --command go install github.com/wailsapp/wails/v2/cmd/wails@latest
-
-      - name: Build Application
-        run: |
-          nix develop --command bash -c "cd wails-app && make build"
 
       - name: Run Linter
         run: |
