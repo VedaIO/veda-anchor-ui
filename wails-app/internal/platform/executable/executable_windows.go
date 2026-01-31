@@ -81,15 +81,6 @@ func GetProductName(exePath string) (string, error) {
 	return info.ProductName(), nil
 }
 
-// IsMicrosoftSigned checks if the executable is signed by Microsoft.
-func IsMicrosoftSigned(exePath string) bool {
-	publisher, err := GetPublisherName(exePath)
-	if err != nil {
-		return false
-	}
-	return strings.Contains(publisher, "Microsoft")
-}
-
 // GetCommercialName retrieves the commercial name of the application.
 // It tries to find the FileDescription, ProductName, or OriginalFilename from the executable's version info.
 // If none are found, it falls back to the filename without extension.

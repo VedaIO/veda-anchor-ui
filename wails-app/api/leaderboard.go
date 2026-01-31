@@ -2,8 +2,7 @@ package api
 
 import (
 	"time"
-	"wails-app/internal/data"
-	"wails-app/internal/web"
+	"wails-app/internal/data/query"
 )
 
 // AppLeaderboardItem represents a single item in the application leaderboard.
@@ -35,14 +34,14 @@ func (s *Server) getAppLeaderboard(since, until string) ([]AppLeaderboardItem, e
 	var err error
 
 	if since != "" {
-		sinceTime, err = data.ParseTime(since)
+		sinceTime, err = query.ParseTime(since)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if until != "" {
-		untilTime, err = data.ParseTime(until)
+		untilTime, err = query.ParseTime(until)
 		if err != nil {
 			return nil, err
 		}
@@ -116,14 +115,14 @@ func (s *Server) getWebLeaderboard(since, until string) ([]WebLeaderboardItem, e
 	var err error
 
 	if since != "" {
-		sinceTime, err = data.ParseTime(since)
+		sinceTime, err = query.ParseTime(since)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if until != "" {
-		untilTime, err = data.ParseTime(until)
+		untilTime, err = query.ParseTime(until)
 		if err != nil {
 			return nil, err
 		}
@@ -174,7 +173,7 @@ func (s *Server) getWebLeaderboard(since, until string) ([]WebLeaderboardItem, e
 		}
 
 		// Enrich with metadata
-		if meta, err := web.GetWebMetadata(s.db, item.Domain); err == nil && meta != nil {
+		if meta, err := query.GetWebMetadata(s.db, item.Domain); err == nil && meta != nil {
 			item.Title = meta.Title
 			item.Icon = meta.IconURL
 		}

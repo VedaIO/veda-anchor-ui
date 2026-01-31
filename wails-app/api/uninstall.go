@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"wails-app/internal/app"
 	"wails-app/internal/auth"
-	"wails-app/internal/data"
+	"wails-app/internal/blocklist/app"
+	"wails-app/internal/config"
+	"wails-app/internal/data/logger"
 	"wails-app/internal/platform/autostart"
 	"wails-app/internal/platform/nativehost"
 	"wails-app/internal/platform/uninstall"
@@ -19,7 +20,7 @@ const appName = "ProcGuard"
 // Uninstall handles the uninstallation of the application.
 // It performs a series of cleanup tasks in a separate goroutine and then initiates a self-deletion process.
 func (s *Server) Uninstall(password string) error {
-	cfg, err := data.LoadConfig()
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		return err
 	}
@@ -65,7 +66,7 @@ func (s *Server) Uninstall(password string) error {
 }
 
 // killOtherProcGuardProcesses finds and terminates any other running ProcGuard processes.
-func killOtherProcGuardProcesses(logger data.Logger) {
+func killOtherProcGuardProcesses(logger logger.Logger) {
 	currentPid := os.Getpid()
 	procs, err := process.Processes()
 	if err != nil {
@@ -102,7 +103,7 @@ func unblockAll() error {
 			newName := strings.TrimSuffix(name, ".blocked")
 			if err := os.Rename(name, newName); err != nil {
 				// Log the error but continue trying to unblock other files.
-				data.GetLogger().Printf("Failed to unblock file %s: %v", name, err)
+				logger.GetLogger().Printf("Failed to unblock file %s: %v", name, err)
 			}
 		}
 	}

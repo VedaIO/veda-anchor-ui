@@ -17,11 +17,6 @@ func GetProductName(exePath string) (string, error) {
 	return "", fmt.Errorf("not implemented on linux")
 }
 
-// IsMicrosoftSigned checks if the executable is signed by Microsoft (Not Implemented).
-func IsMicrosoftSigned(exePath string) bool {
-	return false
-}
-
 // GetCommercialName retrieves the commercial name of the application.
 // On Linux, this currently returns the base filename.
 func GetCommercialName(exePath string) (string, error) {

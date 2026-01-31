@@ -34,7 +34,7 @@ import { checkExtension } from './lib/extensionStore';
 async function handleStop() {
   if (confirm('Bạn có chắc chắn muốn dừng ProcGuard không?')) {
     try {
-      await window.go.main.App.Stop();
+      await window.go.main.App.Shutdown();
       alert('ProcGuard đã được dừng.');
     } catch (error) {
       console.error('Lỗi khi dừng ProcGuard:', error);
@@ -246,6 +246,7 @@ onMount(async () => {
   .app-content {
     flex: 1;
     overflow-y: auto; /* Allow content scrolling */
+    overflow-x: hidden; /* Prevent horizontal swipe */
     display: flex;
     flex-direction: column;
   }

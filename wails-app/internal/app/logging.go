@@ -5,36 +5,38 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"wails-app/internal/data"
-	"wails-app/internal/platform/executable"
-	"wails-app/internal/platform/integrity"
-	"wails-app/internal/platform/window"
+	"wails-app/internal/data/logger"
+	"wails-app/internal/data/write"
+	"wails-app/internal/platform/app_filter"
 
 	"github.com/shirou/gopsutil/v3/process"
 )
 
 const processCheckInterval = 2 * time.Second
 
-// loggedApps tracks which applications have already been logged (deduplication)
-// Key is lowercase process name (e.g., "chrome.exe")
-var loggedApps = make(map[string]bool)
-var loggedAppsMu sync.Mutex
+// loggerState encapsulates the in-memory state of the process monitor.
+type loggerState struct {
+	runningProcs     map[int32]string // PID -> lowercase process name
+	runningAppCounts map[string]int   // lowercase process name -> instance count
+	sync.Mutex
+}
 
 var resetLoggerCh = make(chan struct{}, 1)
 
 // ResetLoggedApps clears the in-memory cache of logged applications.
-// This allows applications that were previously logged to be logged again
-// after a history clear.
 func ResetLoggedApps() {
 	resetLoggerCh <- struct{}{}
 }
 
 // StartProcessEventLogger starts a long-running goroutine that monitors process creation and termination events.
-func StartProcessEventLogger(appLogger data.Logger, db *sql.DB) {
+func StartProcessEventLogger(appLogger logger.Logger, db *sql.DB) {
+	state := &loggerState{
+		runningProcs:     make(map[int32]string),
+		runningAppCounts: make(map[string]int),
+	}
+
 	go func() {
-		runningProcs := make(map[int32]bool)
-		initializeRunningProcs(runningProcs, db)
+		initializeRunningProcs(state, db)
 
 		ticker := time.NewTicker(processCheckInterval)
 		defer ticker.Stop()
@@ -48,180 +50,122 @@ func StartProcessEventLogger(appLogger data.Logger, db *sql.DB) {
 					continue
 				}
 
-				currentProcs := make(map[int32]bool)
+				currentPids := make(map[int32]bool)
 				for _, p := range procs {
-					currentProcs[p.Pid] = true
+					currentPids[p.Pid] = true
 				}
 
-				logEndedProcesses(appLogger, db, runningProcs, currentProcs)
-				logNewProcesses(appLogger, db, runningProcs, procs)
+				logEndedProcesses(state, currentPids)
+				logNewProcesses(state, appLogger, procs)
 			case <-resetLoggerCh:
 				appLogger.Printf("[Logger] Reset signal received. Clearing in-memory state.")
-				loggedAppsMu.Lock()
-				loggedApps = make(map[string]bool)
-				loggedAppsMu.Unlock()
-
-				// Clear runningProcs completely.
-				// This ensures that even currently running apps will be re-detected as "new"
-				// in the next ticker cycle and logged to the cleared database.
-				runningProcs = make(map[int32]bool)
+				state.Lock()
+				state.runningProcs = make(map[int32]string)
+				state.runningAppCounts = make(map[string]int)
+				state.Unlock()
 			}
 		}
 	}()
 }
 
-func logEndedProcesses(appLogger data.Logger, db *sql.DB, runningProcs, currentProcs map[int32]bool) {
-	for pid := range runningProcs {
-		if !currentProcs[pid] {
-			data.EnqueueWrite("UPDATE app_events SET end_time = ? WHERE pid = ? AND end_time IS NULL", time.Now().Unix(), pid)
-			delete(runningProcs, pid)
-		}
-	}
-}
+func logEndedProcesses(state *loggerState, currentPids map[int32]bool) {
+	state.Lock()
+	defer state.Unlock()
 
-func logNewProcesses(appLogger data.Logger, db *sql.DB, runningProcs map[int32]bool, procs []*process.Process) {
-	for _, p := range procs {
-		if !runningProcs[p.Pid] {
-			if shouldLogProcess(p) {
-				name, _ := p.Name()
+	for pid, nameLower := range state.runningProcs {
+		if !currentPids[pid] {
+			write.EnqueueWrite("UPDATE app_events SET end_time = ? WHERE pid = ? AND end_time IS NULL", time.Now().Unix(), pid)
 
-				// Skip logging ProcGuard itself
-				if strings.ToLower(name) == "procguard.exe" {
-					runningProcs[p.Pid] = true
-					continue
-				}
-
-				parent, _ := p.Parent()
-				parentName := ""
-				if parent != nil {
-					parentName, _ = parent.Name()
-				}
-
-				exePath, err := p.Exe()
-				if err != nil {
-					appLogger.Printf("Failed to get exe path for %s (pid %d): %v", name, p.Pid, err)
-				}
-				data.EnqueueWrite("INSERT INTO app_events (process_name, pid, parent_process_name, exe_path, start_time) VALUES (?, ?, ?, ?, ?)",
-					name, p.Pid, parentName, exePath, time.Now().Unix())
-				runningProcs[p.Pid] = true
+			delete(state.runningProcs, pid)
+			state.runningAppCounts[nameLower]--
+			if state.runningAppCounts[nameLower] <= 0 {
+				delete(state.runningAppCounts, nameLower)
 			}
 		}
 	}
 }
 
-func initializeRunningProcs(runningProcs map[int32]bool, db *sql.DB) {
-	rows, err := db.Query("SELECT pid FROM app_events WHERE end_time IS NULL")
+func logNewProcesses(state *loggerState, appLogger logger.Logger, procs []*process.Process) {
+	state.Lock()
+	defer state.Unlock()
+
+	for _, p := range procs {
+		if _, exists := state.runningProcs[p.Pid]; exists {
+			continue
+		}
+
+		name, err := p.Name()
+		if err != nil || name == "" {
+			continue // Retry next tick
+		}
+		nameLower := strings.ToLower(name)
+
+		exePath, err := p.Exe()
+		if err != nil {
+			continue // Retry next tick
+		}
+
+		// Rule 1: Platform-specific system exclusion
+		if app_filter.ShouldExclude(exePath, p) {
+			state.runningProcs[p.Pid] = nameLower
+			continue
+		}
+
+		// Rule 2: Deduplication (Reference Counting)
+		// If count > 0, it means an instance is already logged and active.
+		isAlreadyLogged := state.runningAppCounts[nameLower] > 0
+
+		if isAlreadyLogged {
+			state.runningProcs[p.Pid] = nameLower
+			state.runningAppCounts[nameLower]++
+			continue
+		}
+
+		// Rule 3: Must be a trackable user application (e.g. has a window)
+		if !app_filter.ShouldTrack(exePath, p) {
+			continue // Retry next tick
+		}
+
+		// Success: Log it
+		parent, _ := p.Parent()
+		parentName := ""
+		if parent != nil {
+			parentName, _ = parent.Name()
+		}
+
+		write.EnqueueWrite("INSERT INTO app_events (process_name, pid, parent_process_name, exe_path, start_time) VALUES (?, ?, ?, ?, ?)",
+			name, p.Pid, parentName, exePath, time.Now().Unix())
+
+		state.runningProcs[p.Pid] = nameLower
+		state.runningAppCounts[nameLower]++
+	}
+}
+
+func initializeRunningProcs(state *loggerState, db *sql.DB) {
+	rows, err := db.Query("SELECT pid, process_name FROM app_events WHERE end_time IS NULL")
 	if err != nil {
 		return
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			data.GetLogger().Printf("Failed to close rows: %v", err)
+			logger.GetLogger().Printf("Failed to close rows: %v", err)
 		}
 	}()
 
+	state.Lock()
+	defer state.Unlock()
+
 	for rows.Next() {
 		var pid int32
-		if err := rows.Scan(&pid); err == nil {
+		var name string
+		if err := rows.Scan(&pid, &name); err == nil {
 			if exists, _ := process.PidExists(pid); exists {
-				runningProcs[pid] = true
+				nameLower := strings.ToLower(name)
+				state.runningProcs[pid] = nameLower
+				state.runningAppCounts[nameLower]++
 			} else {
-				data.EnqueueWrite("UPDATE app_events SET end_time = ? WHERE pid = ? AND end_time IS NULL", time.Now().Unix(), pid)
+				write.EnqueueWrite("UPDATE app_events SET end_time = ? WHERE pid = ? AND end_time IS NULL", time.Now().Unix(), pid)
 			}
 		}
 	}
-}
-
-func shouldLogProcess(p *process.Process) bool {
-	name, err := p.Name()
-	if err != nil || name == "" {
-		return false
-	}
-
-	nameLower := strings.ToLower(name)
-
-	// Rule 0: Never log ProcGuard itself
-	if nameLower == "procguard.exe" {
-		return false
-	}
-
-	// Rule 1: Deduplication - Only log first instance of each application
-	loggedAppsMu.Lock()
-	if loggedApps[nameLower] {
-		loggedAppsMu.Unlock()
-		return false // Already logged this app
-	}
-	loggedAppsMu.Unlock()
-
-	// Rule 2: Skip conhost.exe
-	if nameLower == "conhost.exe" {
-		return false
-	}
-
-	// Rule 3: Log cmd.exe and powershell.exe ONLY if launched by explorer.exe
-	if nameLower == "cmd.exe" || nameLower == "powershell.exe" || nameLower == "pwsh.exe" {
-		parent, err := p.Parent()
-		if err == nil {
-			parentName, err := parent.Name()
-			if err == nil && strings.EqualFold(parentName, "explorer.exe") {
-				// Mark as logged and return true
-				loggedAppsMu.Lock()
-				loggedApps[nameLower] = true
-				loggedAppsMu.Unlock()
-				return true
-			}
-		}
-		return false
-	}
-
-	// Rule 4: Must have visible window (user interaction indicator)
-	if !window.HasVisibleWindow(uint32(p.Pid)) {
-		return false
-	}
-
-	// Rule 5: Skip if System integrity level (system services)
-	il, err := integrity.GetProcessLevel(uint32(p.Pid))
-	if err == nil && il >= integrity.SystemRID {
-		return false
-	}
-
-	// Rule 6: Skip if in System32/SysWOW64 (Windows system processes)
-	exePath, err := p.Exe()
-	if err == nil {
-		exePathLower := strings.ToLower(exePath)
-		if strings.Contains(exePathLower, "\\windows\\system32\\") ||
-			strings.Contains(exePathLower, "\\windows\\syswow64\\") {
-			return false
-		}
-
-		// Rule 6.5: Skip processes with "Microsoft® Windows® Operating System" product name
-		productName, err := executable.GetProductName(exePath)
-		if err == nil && strings.Contains(productName, "Microsoft® Windows® Operating System") {
-			return false
-		}
-	}
-
-	// Rule 7: Prefer processes launched by explorer.exe (Start menu, desktop)
-	parent, err := p.Parent()
-	if err == nil {
-		parentName, err := parent.Name()
-		if err == nil && strings.ToLower(parentName) == "explorer.exe" {
-			loggedAppsMu.Lock()
-			loggedApps[nameLower] = true
-			loggedAppsMu.Unlock()
-			return true
-		}
-	}
-
-	// Rule 8: Skip Microsoft-signed processes ONLY if they are likely background system components.
-	// Since we already checked for Visible Window in Rule 4, and System Path in Rule 6,
-	// if we've reached here, the process is a user-facing Microsoft application (like Edge, Calculator, etc.)
-	// that might have been launched in a way that Rule 7 didn't catch (e.g. background startup).
-	// We allow logging these to be safe, especially after a history clear.
-
-	// Default: Log it (likely a user application)
-	loggedAppsMu.Lock()
-	loggedApps[nameLower] = true
-	loggedAppsMu.Unlock()
-	return true
 }

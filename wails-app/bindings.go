@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"wails-app/api"
-	"wails-app/internal/data"
+	"wails-app/internal/data/logger"
 
 	wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -34,7 +34,7 @@ func NewApp() *App {
 
 // CheckChromeExtension checks if the Chrome extension is connected
 func (a *App) CheckChromeExtension() bool {
-	log := data.GetLogger() // Use the logger we set up in main.go
+	log := logger.GetLogger() // Use the logger we set up in main.go
 
 	cacheDir, err := os.UserCacheDir()
 	if err != nil {

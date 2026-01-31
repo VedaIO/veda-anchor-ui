@@ -18,11 +18,6 @@ func GetProductName(exePath string) (string, error) {
 	return "", fmt.Errorf("not implemented on darwin")
 }
 
-// IsMicrosoftSigned checks if the executable is signed by Microsoft (Not Implemented).
-func IsMicrosoftSigned(exePath string) bool {
-	return false
-}
-
 // GetCommercialName retrieves the commercial name of the application.
 // On macOS, this currently returns the filename without extension.
 func GetCommercialName(exePath string) (string, error) {

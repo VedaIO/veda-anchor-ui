@@ -14,8 +14,9 @@ import (
 	"wails-app/api"
 	"wails-app/internal/daemon"
 	"wails-app/internal/data"
+	"wails-app/internal/data/logger"
 	"wails-app/internal/platform/nativehost"
-	"wails-app/internal/web"
+	"wails-app/internal/web/native_messaging"
 )
 
 // Embed the entire frontend/dist directory into the Go binary
@@ -46,7 +47,7 @@ func (a *App) startup(ctx context.Context) {
 	}
 
 	// Initialize logger with database
-	data.NewLogger(db)
+	logger.NewLogger(db)
 
 	// Create API server with database connection
 	a.Server = api.NewServer(db)
@@ -88,7 +89,7 @@ func main() {
 	// In this mode, we MUST NOT show a GUI. We only run the message loop.
 	if len(os.Args) > 1 && strings.HasPrefix(os.Args[1], "chrome-extension://") {
 		log.Println("[MODE] Native Messaging Host detected")
-		web.Run()
+		native_messaging.Run()
 		log.Println("[MODE] Native Messaging Host exited")
 		return
 	}

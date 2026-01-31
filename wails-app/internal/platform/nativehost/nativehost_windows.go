@@ -8,9 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"wails-app/internal/data"
-
 	"golang.org/x/sys/windows/registry"
+	"wails-app/internal/data/logger"
 )
 
 const (
@@ -22,7 +21,7 @@ const (
 // InstallNativeHost sets up the native messaging host for Chrome, Edge, and Firefox by creating registry keys
 // that point to a manifest file. This allows browser extensions to communicate with the application.
 func InstallNativeHost(exePath, extensionId string) error {
-	log := data.GetLogger()
+	log := logger.GetLogger()
 
 	// Register for multiple browsers
 	browsers := []string{
@@ -99,7 +98,7 @@ func CreateManifest(manifestPath, exePath, extensionId string) error {
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
-			data.GetLogger().Printf("Failed to close file: %v", err)
+			logger.GetLogger().Printf("Failed to close file: %v", err)
 		}
 	}()
 
@@ -138,7 +137,7 @@ func Remove() error {
 	// Delete the heartbeat file too
 	heartbeatPath := filepath.Join(appDataDir, "extension_heartbeat")
 	if err := os.Remove(heartbeatPath); err != nil && !os.IsNotExist(err) {
-		data.GetLogger().Printf("Failed to remove heartbeat: %v", err)
+		logger.GetLogger().Printf("Failed to remove heartbeat: %v", err)
 	}
 
 	if err := os.Remove(manifestPath); err != nil && !os.IsNotExist(err) {

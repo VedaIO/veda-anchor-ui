@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"slices"
 	"time"
-	"wails-app/internal/data"
-	"wails-app/internal/web"
+	"wails-app/internal/blocklist/web"
+	"wails-app/internal/data/query"
 )
 
 // GetWebBlocklist returns the list of blocked websites with their details.
@@ -77,6 +77,6 @@ func (s *Server) LoadWebBlocklist(content []byte) error {
 }
 
 // GetWebLogs retrieves web logs from the database within a given time range.
-func (s *Server) GetWebLogs(query, since, until string) ([][]string, error) {
-	return data.GetWebLogs(s.db, query, since, until)
+func (s *Server) GetWebLogs(queryStr, since, until string) ([][]string, error) {
+	return query.GetWebLogs(s.db, queryStr, since, until)
 }

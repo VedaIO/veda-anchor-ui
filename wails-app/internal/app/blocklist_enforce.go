@@ -5,7 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"wails-app/internal/data"
+	"wails-app/internal/blocklist/app"
+	"wails-app/internal/data/logger"
 
 	"github.com/shirou/gopsutil/v3/process"
 )
@@ -13,12 +14,12 @@ import (
 const blocklistEnforceInterval = 2 * time.Second
 
 // StartBlocklistEnforcer starts a goroutine that kills processes listed in the blocklist.
-func StartBlocklistEnforcer(appLogger data.Logger) {
+func StartBlocklistEnforcer(appLogger logger.Logger) {
 	go func() {
 		killTick := time.NewTicker(blocklistEnforceInterval)
 		defer killTick.Stop()
 		for range killTick.C {
-			list, err := LoadAppBlocklist()
+			list, err := app.LoadAppBlocklist()
 			if err != nil {
 				appLogger.Printf("failed to fetch blocklist: %v", err)
 				continue
