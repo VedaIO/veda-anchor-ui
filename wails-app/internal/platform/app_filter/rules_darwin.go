@@ -17,6 +17,11 @@ func ShouldExclude(exePath string, proc *process.Process) bool {
 		return true
 	}
 
-	// Basic filtering for Linux/Darwin could be added here (e.g., /usr/bin vs /bin)
 	return false
+}
+
+// ShouldTrack returns true if the process should be tracked (Stub for non-Windows).
+func ShouldTrack(exePath string, proc *process.Process) bool {
+	// Simple heuristic for Darwin: everything not excluded is tracked
+	return true
 }

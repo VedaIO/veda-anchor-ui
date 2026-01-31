@@ -8,7 +8,6 @@ import (
 	"wails-app/internal/data/logger"
 	"wails-app/internal/data/write"
 	"wails-app/internal/platform/app_filter"
-	"wails-app/internal/platform/window"
 
 	"github.com/shirou/gopsutil/v3/process"
 )
@@ -84,12 +83,6 @@ func logNewProcesses(appLogger logger.Logger, db *sql.DB, runningProcs map[int32
 			if shouldLogProcess(p) {
 				name, _ := p.Name()
 
-				// Skip logging ProcGuard itself
-				if strings.ToLower(name) == "procguard.exe" {
-					runningProcs[p.Pid] = true
-					continue
-				}
-
 				parent, _ := p.Parent()
 				parentName := ""
 				if parent != nil {
@@ -139,63 +132,26 @@ func shouldLogProcess(p *process.Process) bool {
 
 	nameLower := strings.ToLower(name)
 
-	// Rule 0: Never log ProcGuard itself
-	if nameLower == "procguard.exe" {
-		return false
-	}
-
-	// Rule 1: Deduplication - Only log first instance of each application
+	// Deduplication - Only log first instance of each application
 	loggedAppsMu.Lock()
 	if loggedApps[nameLower] {
 		loggedAppsMu.Unlock()
-		return false // Already logged this app
+		return false
 	}
 	loggedAppsMu.Unlock()
 
-	// Rule 2: Skip conhost.exe
-	if nameLower == "conhost.exe" {
-		return false
-	}
-
-	// Rule 3: Log cmd.exe and powershell.exe ONLY if launched by explorer.exe
-	if nameLower == "cmd.exe" || nameLower == "powershell.exe" || nameLower == "pwsh.exe" {
-		parent, err := p.Parent()
-		if err == nil {
-			parentName, err := parent.Name()
-			if err == nil && strings.EqualFold(parentName, "explorer.exe") {
-				// Mark as logged and return true
-				loggedAppsMu.Lock()
-				loggedApps[nameLower] = true
-				loggedAppsMu.Unlock()
-				return true
-			}
-		}
-		return false
-	}
-
-	// Rule 4: Must have visible window (user interaction indicator)
-	if !window.HasVisibleWindow(uint32(p.Pid)) {
-		return false
-	}
-
-	// Rule 5: Platform-specific system exclusion
+	// Must be a trackable user application
 	exePath, err := p.Exe()
-	if err == nil {
-		if app_filter.ShouldExclude(exePath, p) {
-			return false
-		}
+	if err != nil {
+		return false
 	}
 
-	// Rule 7: Prefer processes launched by explorer.exe (Start menu, desktop)
-	parent, err := p.Parent()
-	if err == nil {
-		parentName, err := parent.Name()
-		if err == nil && strings.ToLower(parentName) == "explorer.exe" {
-			loggedAppsMu.Lock()
-			loggedApps[nameLower] = true
-			loggedAppsMu.Unlock()
-			return true
-		}
+	if app_filter.ShouldExclude(exePath, p) {
+		return false
+	}
+
+	if !app_filter.ShouldTrack(exePath, p) {
+		return false
 	}
 
 	// Default: Log it (likely a user application)
