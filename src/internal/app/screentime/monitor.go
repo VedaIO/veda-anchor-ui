@@ -1,9 +1,8 @@
 package screentime
 
 import (
-	"database/sql"
 	"src/internal/data/logger"
-	"src/internal/data/write"
+	"src/internal/data/repository"
 	"src/internal/platform/app_filter"
 	"src/internal/platform/proc_sensing"
 	platformScreentime "src/internal/platform/screentime"
@@ -27,7 +26,7 @@ func ResetScreenTime() {
 // StartScreenTimeMonitor initializes and starts the background goroutine for tracking screen time.
 // It uses a ticker to poll the foreground window at regular intervals and buffers updates
 // to reduce database I/O.
-func StartScreenTimeMonitor(appLogger logger.Logger, db *sql.DB) {
+func StartScreenTimeMonitor(appLogger logger.Logger, apps *repository.AppRepository, web *repository.WebRepository) {
 	go func() {
 		state := &ScreenTimeState{
 			LastFlushTime: time.Now(),
@@ -39,7 +38,7 @@ func StartScreenTimeMonitor(appLogger logger.Logger, db *sql.DB) {
 		for {
 			select {
 			case <-ticker.C:
-				trackForegroundWindow(appLogger, state)
+				trackForegroundWindow(appLogger, state, apps, web)
 			case <-resetScreenTimeCh:
 				appLogger.Printf("[Screentime] Reset signal received. Clearing in-memory state.")
 				state.LastUniqueKey = ""
@@ -52,7 +51,7 @@ func StartScreenTimeMonitor(appLogger logger.Logger, db *sql.DB) {
 }
 
 // trackForegroundWindow performs a single check of the active window and updates the state.
-func trackForegroundWindow(appLogger logger.Logger, state *ScreenTimeState) {
+func trackForegroundWindow(appLogger logger.Logger, state *ScreenTimeState, apps *repository.AppRepository, web *repository.WebRepository) {
 	// Retrieve the active window information from the platform-specific implementation.
 	info := platformScreentime.GetActiveWindowInfo()
 	if info == nil || info.PID == 0 {
@@ -81,23 +80,14 @@ func trackForegroundWindow(appLogger logger.Logger, state *ScreenTimeState) {
 	} else {
 		// App changed: flush the accumulated time for the *previous* app.
 		if state.PendingDuration > 0 {
-			flushScreenTime(appLogger, state.LastExePath, state.PendingDuration)
+			apps.UpdateScreenTime(state.LastExePath, state.PendingDuration)
 		}
 
 		// Update existing record for this app if it was recently active, otherwise create a new one.
-		now := time.Now().Unix()
 		appLogger.Printf("[Screentime] Focus shifted to: %s", exePath)
 
 		// Attempt to update a record if it was active in the last 5 minutes.
-		write.EnqueueWrite(`
-			INSERT INTO screen_time (executable_path, timestamp, duration_seconds)
-			SELECT ?, ?, 1
-			WHERE NOT EXISTS (
-				SELECT 1 FROM screen_time 
-				WHERE executable_path = ? AND timestamp > ?
-				ORDER BY timestamp DESC LIMIT 1
-			)
-		`, exePath, now, exePath, now-300)
+		apps.EnsureActiveScreenTimeRecord(exePath)
 
 		// Update our state to reflect the new active window.
 		state.LastUniqueKey = uniqueKey
@@ -109,7 +99,7 @@ func trackForegroundWindow(appLogger logger.Logger, state *ScreenTimeState) {
 	// This ensures the UI shows relatively up-to-date data during long sessions in one app.
 	if time.Since(state.LastFlushTime) >= dbFlushInterval {
 		if state.PendingDuration > 0 {
-			flushScreenTime(appLogger, state.LastExePath, state.PendingDuration)
+			apps.UpdateScreenTime(state.LastExePath, state.PendingDuration)
 			state.PendingDuration = 0 // Reset buffer after flush.
 		}
 		state.LastFlushTime = time.Now()

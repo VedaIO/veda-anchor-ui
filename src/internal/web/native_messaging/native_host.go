@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"runtime/debug"
 	"src/internal/data"
+	"src/internal/data/repository"
+	"src/internal/data/write"
 	"time"
 )
 
@@ -28,11 +30,15 @@ func Run() {
 	}
 
 	// Initialize Database (CRITICAL: Required for logging)
-	if _, err := data.InitDB(); err != nil {
+	var repo *repository.WebRepository
+	db, err := data.InitDB()
+	if err != nil {
 		log.Printf("CRITICAL: Failed to initialize database: %v", err)
 		// We continue anyway, but DB writes will fail
 	} else {
 		log.Println("Database initialized successfully")
+		repo = repository.NewWebRepository(db)
+		go write.StartDatabaseWriter(db) // Sequential writes are still needed here
 	}
 
 	// Catch panics to see why it crashes
@@ -98,7 +104,7 @@ func Run() {
 			continue
 		}
 
-		handleRequest(req)
+		handleRequest(req, repo)
 
 		log.Println("Message processed successfully")
 	}

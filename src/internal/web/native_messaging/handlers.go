@@ -4,13 +4,11 @@ import (
 	"encoding/json"
 	"log"
 	blocklist "src/internal/blocklist/web"
-	"src/internal/data/query"
-	"src/internal/data/write"
-	"time"
+	"src/internal/data/repository"
 )
 
 // handleRequest dispatches the incoming request to the appropriate handler logic.
-func handleRequest(req Request) {
+func handleRequest(req Request, repo *repository.WebRepository) {
 	log.Printf("Processing message type: %s", req.Type)
 
 	switch req.Type {
@@ -26,10 +24,8 @@ func handleRequest(req Request) {
 		}
 
 		log.Printf("Logging URL: %s", payload.Url)
-		// Write to DB
-		if err := query.LogWebActivity(payload.Url, payload.Title, payload.VisitTime); err != nil {
-			log.Printf("DB Error: %v", err)
-		}
+		// Write to DB via Repository
+		repo.LogWebEvent(payload.Url, payload.Title)
 
 	case "log_web_metadata":
 		var payload WebMetadataPayload
@@ -38,9 +34,10 @@ func handleRequest(req Request) {
 			return
 		}
 
-		// Log metadata directly to the database
-		write.EnqueueWrite("INSERT OR REPLACE INTO web_metadata (domain, title, icon_url, timestamp) VALUES (?, ?, ?, ?)",
-			payload.Domain, payload.Title, payload.IconURL, time.Now().Unix())
+		// Log metadata directly to the database via Repository
+		if err := repo.SaveMetadata(payload.Domain, payload.Title, payload.IconURL); err != nil {
+			log.Printf("Error saving metadata: %v", err)
+		}
 
 	case "get_web_blocklist":
 		// Send blocklist

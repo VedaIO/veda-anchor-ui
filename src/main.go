@@ -54,7 +54,7 @@ func (a *App) startup(ctx context.Context) {
 
 	// Start the background daemon that monitors processes and web activity
 	// This runs independently of the GUI - continues even when window is hidden
-	daemon.Start(a.Logger, db)
+	daemon.Start(a.Logger, a.Apps, a.Web)
 
 	// Ensure Native Messaging Host is registered
 	// This creates the registry key and manifest file so Chrome can find us

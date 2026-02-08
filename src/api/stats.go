@@ -1,7 +1,7 @@
 package api
 
 import (
-	"src/internal/data/query"
+	"src/internal/data/repository"
 	"strings"
 	"time"
 )
@@ -34,10 +34,10 @@ type ScreenTimeItem struct {
 // --- App Usage ---
 
 func (s *Server) GetAppLeaderboard(since, until string) ([]AppLeaderboardItem, error) {
-	sinceTime, _ := query.ParseTime(since)
-	untilTime, _ := query.ParseTime(until)
+	sinceTime, _ := repository.ParseTime(since)
+	untilTime, _ := repository.ParseTime(until)
 
-	records, err := query.GetAppUsageRanking(s.db, sinceTime, untilTime)
+	records, err := s.Apps.GetUsageRanking(sinceTime, untilTime)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (s *Server) GetScreenTime() ([]ScreenTimeItem, error) {
 	now := time.Now()
 	todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).Unix()
 
-	records, err := query.GetScreenTimeTotals(s.db, todayStart)
+	records, err := s.Apps.GetScreenTimeTotals(todayStart)
 	if err != nil {
 		return nil, err
 	}
@@ -91,16 +91,16 @@ func (s *Server) GetScreenTime() ([]ScreenTimeItem, error) {
 func (s *Server) GetTotalScreenTime() (int, error) {
 	now := time.Now()
 	todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).Unix()
-	return query.GetTotalDayScreenTime(s.db, todayStart)
+	return s.Apps.GetTotalDayScreenTime(todayStart)
 }
 
 // --- Web Usage ---
 
 func (s *Server) GetWebLeaderboard(since, until string) ([]WebLeaderboardItem, error) {
-	sinceTime, _ := query.ParseTime(since)
-	untilTime, _ := query.ParseTime(until)
+	sinceTime, _ := repository.ParseTime(since)
+	untilTime, _ := repository.ParseTime(until)
 
-	records, err := query.GetWebUsageRanking(s.db, sinceTime, untilTime)
+	records, err := s.Web.GetUsageRanking(sinceTime, untilTime)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (s *Server) GetWebLeaderboard(since, until string) ([]WebLeaderboardItem, e
 			Domain: r.Domain,
 			Count:  r.Count,
 		}
-		if meta, err := query.GetWebMetadata(s.db, r.Domain); err == nil && meta != nil {
+		if meta, err := s.Web.GetMetadata(r.Domain); err == nil && meta != nil {
 			item.Title = meta.Title
 			item.Icon = meta.IconURL
 		}
@@ -124,11 +124,11 @@ func (s *Server) GetWebLeaderboard(since, until string) ([]WebLeaderboardItem, e
 // --- Logs & Search ---
 
 func (s *Server) Search(queryStr, since, until string) ([][]string, error) {
-	return query.SearchAppEvents(s.db, strings.ToLower(queryStr), since, until)
+	return s.Apps.SearchEvents(strings.ToLower(queryStr), since, until)
 }
 
 func (s *Server) GetWebLogs(queryStr, since, until string) ([][]string, error) {
-	return query.GetWebLogs(s.db, queryStr, since, until)
+	return s.Web.GetLogs(queryStr, since, until)
 }
 
 // --- Utils ---

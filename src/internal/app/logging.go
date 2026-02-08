@@ -1,10 +1,9 @@
 package app
 
 import (
-	"database/sql"
 	"fmt"
 	"src/internal/data/logger"
-	"src/internal/data/write"
+	"src/internal/data/repository"
 	"src/internal/platform/app_filter"
 	"src/internal/platform/proc_sensing"
 	"strings"
@@ -29,14 +28,14 @@ func ResetLoggedApps() {
 }
 
 // StartProcessEventLogger starts a long-running goroutine that monitors process creation and termination events.
-func StartProcessEventLogger(appLogger logger.Logger, db *sql.DB) {
+func StartProcessEventLogger(appLogger logger.Logger, repo *repository.AppRepository) {
 	state := &loggerState{
 		runningProcs:     make(map[string]string),
 		runningAppCounts: make(map[string]int),
 	}
 
 	go func() {
-		initializeRunningProcs(state, db)
+		initializeRunningProcs(state, repo)
 
 		ticker := time.NewTicker(processCheckInterval)
 		defer ticker.Stop()
@@ -55,8 +54,8 @@ func StartProcessEventLogger(appLogger logger.Logger, db *sql.DB) {
 					currentKeys[p.UniqueKey()] = true
 				}
 
-				logEndedProcesses(state, currentKeys)
-				logNewProcesses(state, appLogger, procs)
+				logEndedProcesses(state, currentKeys, repo)
+				logNewProcesses(state, appLogger, procs, repo)
 			case <-resetLoggerCh:
 				appLogger.Printf("[Logger] Reset signal received. Clearing in-memory state.")
 				state.Lock()
@@ -68,17 +67,14 @@ func StartProcessEventLogger(appLogger logger.Logger, db *sql.DB) {
 	}()
 }
 
-// ... (StartProcessEventLogger remains same)
-
-func logEndedProcesses(state *loggerState, currentKeys map[string]bool) {
+func logEndedProcesses(state *loggerState, currentKeys map[string]bool, repo *repository.AppRepository) {
 	state.Lock()
 	defer state.Unlock()
 
 	for key, nameLower := range state.runningProcs {
 		if !currentKeys[key] {
 			// process_instance_key (PID-StartTimeNano) is used to uniquely identify the session row.
-			write.EnqueueWrite("UPDATE app_events SET end_time = ? WHERE process_instance_key = ? AND end_time IS NULL",
-				time.Now().Unix(), key)
+			repo.CloseAppEvent(key, time.Now().Unix())
 
 			delete(state.runningProcs, key)
 			state.runningAppCounts[nameLower]--
@@ -89,7 +85,7 @@ func logEndedProcesses(state *loggerState, currentKeys map[string]bool) {
 	}
 }
 
-func logNewProcesses(state *loggerState, appLogger logger.Logger, procs []proc_sensing.ProcessInfo) {
+func logNewProcesses(state *loggerState, appLogger logger.Logger, procs []proc_sensing.ProcessInfo, repo *repository.AppRepository) {
 	state.Lock()
 	defer state.Unlock()
 
@@ -133,25 +129,19 @@ func logNewProcesses(state *loggerState, appLogger logger.Logger, procs []proc_s
 		parentName := fmt.Sprintf("PID: %d", p.ParentPID)
 
 		// Store a standard Unix timestamp for display and the high-precision UniqueKey for process identity.
-		write.EnqueueWrite("INSERT INTO app_events (process_name, pid, parent_process_name, exe_path, start_time, process_instance_key) VALUES (?, ?, ?, ?, ?, ?)",
-			name, p.PID, parentName, exePath, time.Now().Unix(), key)
+		repo.LogAppEvent(name, p.PID, parentName, exePath, time.Now().Unix(), key)
 
 		state.runningProcs[key] = nameLower
 		state.runningAppCounts[nameLower]++
 	}
 }
 
-func initializeRunningProcs(state *loggerState, db *sql.DB) {
-	// Restore state primarily using the precise key
-	rows, err := db.Query("SELECT pid, process_name, process_instance_key FROM app_events WHERE end_time IS NULL AND process_instance_key IS NOT NULL")
+func initializeRunningProcs(state *loggerState, repo *repository.AppRepository) {
+	// Restore state primarily using the precise key via the repository
+	activeSessions, err := repo.GetActiveSessions()
 	if err != nil {
 		return
 	}
-	defer func() {
-		if err := rows.Close(); err != nil {
-			logger.GetLogger().Printf("Failed to close rows: %v", err)
-		}
-	}()
 
 	state.Lock()
 	defer state.Unlock()
@@ -163,20 +153,14 @@ func initializeRunningProcs(state *loggerState, db *sql.DB) {
 		currentKeys[p.UniqueKey()] = true
 	}
 
-	for rows.Next() {
-		var pid int32
-		var name string
-		var key string
-		if err := rows.Scan(&pid, &name, &key); err == nil {
-			if currentKeys[key] {
-				nameLower := strings.ToLower(name)
-				state.runningProcs[key] = nameLower
-				state.runningAppCounts[nameLower]++
-			} else {
-				// Process no longer running (or PID recycled/different instance) - Close it!
-				write.EnqueueWrite("UPDATE app_events SET end_time = ? WHERE process_instance_key = ? AND end_time IS NULL",
-					time.Now().Unix(), key)
-			}
+	for _, s := range activeSessions {
+		if currentKeys[s.Key] {
+			nameLower := strings.ToLower(s.Name)
+			state.runningProcs[s.Key] = nameLower
+			state.runningAppCounts[nameLower]++
+		} else {
+			// Process no longer running (or PID recycled/different instance) - Close it!
+			repo.CloseAppEvent(s.Key, time.Now().Unix())
 		}
 	}
 }

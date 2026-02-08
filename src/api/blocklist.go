@@ -41,7 +41,24 @@ func (s *Server) UnblockApps(names []string) error {
 }
 
 func (s *Server) GetAppBlocklist() ([]app.BlockedAppDetail, error) {
-	return app.GetBlockedAppsWithDetails(s.db)
+	names, err := app.LoadAppBlocklist()
+	if err != nil {
+		return nil, err
+	}
+
+	records, err := s.Apps.GetBlockedDetails(names)
+	if err != nil {
+		return nil, err
+	}
+
+	details := make([]app.BlockedAppDetail, 0, len(records))
+	for _, r := range records {
+		details = append(details, app.BlockedAppDetail{
+			Name:    r.Name,
+			ExePath: r.ExePath,
+		})
+	}
+	return details, nil
 }
 
 func (s *Server) ClearAppBlocklist() error {
@@ -86,7 +103,25 @@ func (s *Server) LoadAppBlocklist(content []byte) error {
 // --- Web Blocklist ---
 
 func (s *Server) GetWebBlocklist() ([]web.BlockedWebsiteDetail, error) {
-	return web.GetBlockedWebsitesWithDetails(s.db)
+	domains, err := web.LoadWebBlocklist()
+	if err != nil {
+		return nil, err
+	}
+
+	records, err := s.Web.GetBlockedDetails(domains)
+	if err != nil {
+		return nil, err
+	}
+
+	details := make([]web.BlockedWebsiteDetail, 0, len(records))
+	for _, r := range records {
+		details = append(details, web.BlockedWebsiteDetail{
+			Domain:  r.Domain,
+			Title:   r.Title,
+			IconURL: r.IconURL,
+		})
+	}
+	return details, nil
 }
 
 func (s *Server) AddWebBlocklist(domain string) error {

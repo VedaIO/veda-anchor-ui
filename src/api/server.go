@@ -3,7 +3,7 @@ package api
 import (
 	"database/sql"
 	"src/internal/data/logger"
-	"src/internal/data/query"
+	"src/internal/data/repository"
 	"src/internal/platform/nativehost"
 	"src/internal/service/icon"
 	"sync"
@@ -16,6 +16,8 @@ type Server struct {
 	Mu              sync.Mutex
 	db              *sql.DB
 	icons           *icon.Service
+	Apps            *repository.AppRepository
+	Web             *repository.WebRepository
 }
 
 // NewServer creates a new Server with its dependencies.
@@ -25,6 +27,8 @@ func NewServer(db *sql.DB) *Server {
 		Logger: l,
 		db:     db,
 		icons:  icon.NewService(l),
+		Apps:   repository.NewAppRepository(db),
+		Web:    repository.NewWebRepository(db),
 	}
 }
 
@@ -44,14 +48,14 @@ func (s *Server) GetAppDetails(exePath string) (AppDetailsResponse, error) {
 }
 
 // GetWebDetails retrieves metadata for a given domain.
-func (s *Server) GetWebDetails(domain string) (query.WebMetadata, error) {
-	meta, err := query.GetWebMetadata(s.db, domain)
+func (s *Server) GetWebDetails(domain string) (repository.WebMetadata, error) {
+	meta, err := s.Web.GetMetadata(domain)
 	if err != nil {
-		return query.WebMetadata{}, err
+		return repository.WebMetadata{}, err
 	}
 
 	if meta == nil {
-		return query.WebMetadata{Domain: domain}, nil
+		return repository.WebMetadata{Domain: domain}, nil
 	}
 
 	return *meta, nil
