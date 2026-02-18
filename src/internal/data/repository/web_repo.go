@@ -2,10 +2,27 @@ package repository
 
 import (
 	"database/sql"
+	"net/url"
 	"src/internal/data/logger"
 	"src/internal/data/write"
+	"strings"
 	"time"
 )
+
+// ExtractDomain extracts domain from a URL string.
+// Returns the domain, or the original string if parsing fails.
+func ExtractDomain(urlStr string) string {
+	// Handle URLs without protocol
+	if !strings.Contains(urlStr, "://") {
+		urlStr = "http://" + urlStr
+	}
+
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		return urlStr
+	}
+	return u.Host
+}
 
 // WebBlockedDetail represents a domain with its recorded metadata.
 type WebBlockedDetail struct {
@@ -27,13 +44,7 @@ func NewWebRepository(db *sql.DB) *WebRepository {
 // GetUsageRanking returns the most visited domains in a time range.
 func (r *WebRepository) GetUsageRanking(sinceTime, untilTime time.Time) ([]WebUsageItem, error) {
 	q := `
-		SELECT
-			CASE
-				WHEN INSTR(SUBSTR(url, INSTR(url, '//') + 2), '/') > 0
-				THEN SUBSTR(url, INSTR(url, '//') + 2, INSTR(SUBSTR(url, INSTR(url, '//') + 2), '/') - 1)
-				ELSE SUBSTR(url, INSTR(url, '//') + 2)
-			END as domain,
-			COUNT(*) as count
+		SELECT domain, COUNT(*) as count
 		FROM web_events
 		WHERE 1=1
 	`
@@ -87,11 +98,12 @@ func (r *WebRepository) GetLogs(queryStr, since, until string) ([][]string, erro
 	}
 
 	// Build the SQL query dynamically based on the provided time filters.
-	q := "SELECT url, timestamp FROM web_events WHERE 1=1"
+	// Returns: timestamp, domain, url
+	q := "SELECT timestamp, domain, url FROM web_events WHERE 1=1"
 	args := make([]interface{}, 0)
 
 	if queryStr != "" {
-		q += " AND url LIKE ?"
+		q += " AND domain LIKE ?"
 		args = append(args, "%"+queryStr+"%")
 	}
 
@@ -115,13 +127,14 @@ func (r *WebRepository) GetLogs(queryStr, since, until string) ([][]string, erro
 
 	var entries [][]string
 	for rows.Next() {
-		var url string
 		var timestamp int64
-		if err := rows.Scan(&url, &timestamp); err != nil {
+		var domain string
+		var url string
+		if err := rows.Scan(&timestamp, &domain, &url); err != nil {
 			continue
 		}
 		timestampStr := time.Unix(timestamp, 0).Format("2006-01-02 15:04:05")
-		entries = append(entries, []string{timestampStr, url})
+		entries = append(entries, []string{timestampStr, domain, url})
 	}
 
 	return entries, nil
@@ -178,7 +191,8 @@ func (r *WebRepository) SaveMetadata(domain, title, iconURL string) error {
 }
 
 // LogWebEvent records a visit to a URL.
-func (r *WebRepository) LogWebEvent(url, title string) {
-	write.EnqueueWrite("INSERT INTO web_events (url, title, timestamp) VALUES (?, ?, ?)",
-		url, title, time.Now().Unix())
+func (r *WebRepository) LogWebEvent(urlStr string) {
+	domain := ExtractDomain(urlStr)
+	write.EnqueueWrite("INSERT INTO web_events (url, domain, timestamp) VALUES (?, ?, ?)",
+		urlStr, domain, time.Now().Unix())
 }

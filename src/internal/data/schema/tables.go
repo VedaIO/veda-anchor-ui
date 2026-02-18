@@ -22,11 +22,13 @@ const AppSchema = `
 	CREATE TABLE IF NOT EXISTS web_events (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		url TEXT NOT NULL,
+		domain TEXT NOT NULL,
 		timestamp INTEGER NOT NULL
 	);
 
 	-- Index to speed up queries on web_events.
 	CREATE INDEX IF NOT EXISTS idx_web_events_timestamp ON web_events (timestamp);
+	CREATE INDEX IF NOT EXISTS idx_web_events_domain ON web_events (domain);
 
 	-- logs stores application logs.
 	CREATE TABLE IF NOT EXISTS logs (

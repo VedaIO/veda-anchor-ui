@@ -78,7 +78,7 @@ onMount(() => {
                   {:else}
                     <div class="me-2" style="width: 24px; height: 24px;"></div>
                   {/if}
-                  <span class="fw-bold">{item.title || item.domain}</span>
+                  <span class="fw-bold">{item.domain}</span>
                 </td>
                 <td>{item.count}</td>
                 <td>

@@ -35,34 +35,26 @@ async function loadWebLogs(
     if (data && data.length > 0) {
       const items: WebLogItem[] = await Promise.all(
         data.map(async (l: string[]) => {
-          const urlString = l[1];
-          let domain = '';
-          try {
-            const url = new URL(urlString);
-            domain = url.hostname;
-          } catch {
-            // Ignore invalid URLs
-          }
+          // Backend returns: [timestamp, domain, url]
+          const timestamp = l[0];
+          const domain = l[1];
+          const url = l[2] || '';
 
-          let title = '';
           let iconUrl = '';
           if (domain) {
             try {
               const webDetails = await window.go.main.App.GetWebDetails(domain);
-              title = webDetails.title;
               iconUrl = webDetails.iconUrl;
             } catch (error) {
               console.error('Error fetching web details:', error);
             }
           }
 
-          const timestamp = l[0];
-
           return {
             timestamp,
-            url: urlString,
+            url,
             domain,
-            title,
+            title: '', // No longer used
             iconUrl,
           };
         }),
@@ -200,7 +192,7 @@ onMount(() => {
             {:else}
               <div class="me-2" style="width: 24px; height: 24px;"></div>
             {/if}
-            <span class="fw-bold me-2">{item.title || item.domain}</span>
+            <span class="fw-bold me-2">{item.domain}</span>
             <span class="text-muted ms-auto">{item.timestamp}</span>
           </label>
         {/each}

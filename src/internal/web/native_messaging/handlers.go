@@ -24,8 +24,8 @@ func handleRequest(req Request, repo *repository.WebRepository) {
 		}
 
 		log.Printf("Logging URL: %s", payload.Url)
-		// Write to DB via Repository
-		repo.LogWebEvent(payload.Url, payload.Title)
+		// Write to DB via Repository (domain extracted automatically)
+		repo.LogWebEvent(payload.Url)
 
 	case "log_web_metadata":
 		var payload WebMetadataPayload
