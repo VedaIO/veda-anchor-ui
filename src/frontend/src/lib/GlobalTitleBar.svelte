@@ -19,7 +19,7 @@ async function close() {
 <div class="title-bar" style="--wails-draggable: drag">
   <div class="title-drag-region">
     <!-- Optional: App Icon or Title could go here -->
-    <!-- <span class="app-title">ProcGuard</span> -->
+    <!-- <span class="app-title">Veda</span> -->
   </div>
   <div class="window-controls">
     <button

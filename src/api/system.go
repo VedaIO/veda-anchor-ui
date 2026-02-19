@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-const appName = "ProcGuard"
+const appName = "Veda"
 
 // --- Lifecycle ---
 
@@ -51,7 +51,7 @@ func (s *Server) Uninstall(password string) error {
 			fmt.Fprintf(os.Stderr, "Failed to close database: %v\n", err)
 		}
 
-		s.killOtherProcGuardProcesses()
+		s.killOtherVedaProcesses()
 
 		if err := s.unblockAll(); err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to unblock all files: %v\n", err)
@@ -117,7 +117,7 @@ func (s *Server) ClearWebHistory(password string) error {
 
 // --- Internal Helpers ---
 
-func (s *Server) killOtherProcGuardProcesses() {
+func (s *Server) killOtherVedaProcesses() {
 	currentPid := os.Getpid()
 	procs, err := proc_sensing.GetAllProcesses()
 	if err != nil {
@@ -128,7 +128,7 @@ func (s *Server) killOtherProcGuardProcesses() {
 		if int(p.PID) == currentPid {
 			continue
 		}
-		if strings.HasPrefix(strings.ToLower(p.Name), "procguard") {
+		if strings.HasPrefix(strings.ToLower(p.Name), "Veda") {
 			if osProc, err := os.FindProcess(int(p.PID)); err == nil {
 				_ = osProc.Kill()
 			}

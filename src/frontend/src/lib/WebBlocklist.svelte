@@ -89,7 +89,7 @@ async function saveWebBlocklist(): Promise<void> {
     const a = document.createElement('a');
     a.style.display = 'none';
     a.href = url;
-    a.download = 'procguard_web_blocklist.json';
+    a.download = 'Veda_web_blocklist.json';
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);

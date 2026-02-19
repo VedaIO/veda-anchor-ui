@@ -1,7 +1,7 @@
 {
   "$schema": "https://wails.io/schemas/config.v2.json",
-  "name": "ProcGuard",
-  "outputfilename": "ProcGuard",
+  "name": "Veda",
+  "outputfilename": "Veda",
   "frontend:install": "bun install",
   "frontend:build": "bun run build",
   "frontend:dev:watcher": "bun run dev",
@@ -11,7 +11,7 @@
     "email": "infraflakes@proton.me"
   },
   "info": {
-    "productName": "ProcGuard",
+    "productName": "Veda",
     "companyName": "Nixuris",
     "copyright": "Copyright (c) 2025 Nixuris",
     "productVersion": "1.0.0.0"

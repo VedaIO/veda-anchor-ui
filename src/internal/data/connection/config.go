@@ -16,7 +16,7 @@ func OpenAndConfigureDB() (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not get user cache dir: %w", err)
 	}
-	dbPath := filepath.Join(cacheDir, "ProcGuard", "procguard.db")
+	dbPath := filepath.Join(cacheDir, "Veda", "Veda.db")
 	log.Printf("Database path: %s", dbPath)
 
 	if err := os.MkdirAll(filepath.Dir(dbPath), 0755); err != nil {

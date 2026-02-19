@@ -42,7 +42,7 @@ func (a *App) CheckChromeExtension() bool {
 		return false
 	}
 
-	heartbeatPath := filepath.Join(cacheDir, "ProcGuard", "extension_heartbeat")
+	heartbeatPath := filepath.Join(cacheDir, "Veda", "extension_heartbeat")
 
 	// Read timestamp from file
 	content, err := os.ReadFile(heartbeatPath)

@@ -11,8 +11,8 @@ import (
 func ShouldExclude(exePath string, proc *proc_sensing.ProcessInfo) bool {
 	exePathLower := strings.ToLower(exePath)
 
-	// Rule 0: Never track ProcGuard itself
-	if strings.Contains(exePathLower, "procguard") {
+	// Rule 0: Never track Veda itself
+	if strings.Contains(exePathLower, "Veda") {
 		return true
 	}
 

@@ -15,7 +15,7 @@ import (
 const (
 	// HostName is the name of the native messaging host.
 	// It must match the name specified in the browser extension's manifest.
-	HostName = "com.infraflakes.procguard"
+	HostName = "com.infraflakes.Veda"
 )
 
 // InstallNativeHost sets up the native messaging host for Chrome, Edge, and Firefox by creating registry keys
@@ -37,7 +37,7 @@ func InstallNativeHost(exePath, extensionId string) error {
 		log.Printf("Failed to get user cache dir: %v", err)
 		return fmt.Errorf("failed to get user cache dir: %w", err)
 	}
-	appDataDir := filepath.Join(cacheDir, "ProcGuard")
+	appDataDir := filepath.Join(cacheDir, "Veda")
 	configDir := filepath.Join(appDataDir, "config")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		log.Printf("Failed to create config directory: %v", err)
@@ -80,7 +80,7 @@ func InstallNativeHost(exePath, extensionId string) error {
 func CreateManifest(manifestPath, exePath, extensionId string) error {
 	manifest := map[string]interface{}{
 		"name":        HostName,
-		"description": "ProcGuard native messaging host",
+		"description": "Veda native messaging host",
 		"path":        exePath,
 		"type":        "stdio",
 		"allowed_origins": []string{
@@ -88,7 +88,7 @@ func CreateManifest(manifestPath, exePath, extensionId string) error {
 			"chrome-extension://gpaafgcbiejjpfdgmjglehboafdicdjb/", // Dev Extension ID
 		},
 		"allowed_extensions": []string{
-			"procguard@infraflakes.com",
+			"Veda@infraflakes.com",
 		},
 	}
 
@@ -131,7 +131,7 @@ func Remove() error {
 		return err
 	}
 
-	appDataDir := filepath.Join(cacheDir, "ProcGuard")
+	appDataDir := filepath.Join(cacheDir, "Veda")
 	manifestPath := filepath.Join(appDataDir, "config", "native-host.json")
 
 	// Delete the heartbeat file too
