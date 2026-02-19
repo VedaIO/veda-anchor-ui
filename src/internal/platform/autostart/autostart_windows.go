@@ -13,7 +13,7 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
-const appName = "ProcGuard"
+const appName = "Veda"
 
 // EnsureAutostart sets up the application to run automatically when the user logs on.
 // This is achieved by creating a registry entry in the standard `Software\\Microsoft\\Windows\\CurrentVersion\\Run` key.
@@ -112,7 +112,7 @@ func copyExecutableToAppData() (string, error) {
 		return "", fmt.Errorf("could not find LOCALAPPDATA directory")
 	}
 	destDir := filepath.Join(localAppData, appName)
-	destPath := filepath.Join(destDir, "ProcGuard.exe")
+	destPath := filepath.Join(destDir, "Veda.exe")
 
 	// If the file already exists at the destination, there's no need to copy it again.
 	if _, err := os.Stat(destPath); err == nil {

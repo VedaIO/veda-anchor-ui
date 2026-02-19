@@ -10,12 +10,12 @@ import (
 	"strings"
 )
 
-// ShouldExclude returns true if the process is a Windows system component, conhost.exe, or ProcGuard itself.
+// ShouldExclude returns true if the process is a Windows system component, conhost.exe, or Veda itself.
 func ShouldExclude(exePath string, proc *proc_sensing.ProcessInfo) bool {
 	exePathLower := strings.ToLower(exePath)
 
-	// Never track ProcGuard itself
-	if strings.Contains(exePathLower, "procguard.exe") {
+	// Never track Veda itself
+	if strings.Contains(exePathLower, "Veda.exe") {
 		return true
 	}
 

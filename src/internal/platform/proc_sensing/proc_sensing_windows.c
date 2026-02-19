@@ -8,8 +8,8 @@
 #include <string.h>
 
 // CaptureProcessSnapshot implements the Windows-specific logic using WinAPI.
-ProcGuard_ProcessList CaptureProcessSnapshot() {
-    ProcGuard_ProcessList list = { NULL, 0 };
+Veda_ProcessList CaptureProcessSnapshot() {
+    Veda_ProcessList list = { NULL, 0 };
     
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (snapshot == INVALID_HANDLE_VALUE) return list;
@@ -26,7 +26,7 @@ ProcGuard_ProcessList CaptureProcessSnapshot() {
     int count = 0;
     do { count++; } while (Process32Next(snapshot, &entry));
 
-    list.processes = (ProcGuard_ProcessInfo*)calloc(count, sizeof(ProcGuard_ProcessInfo));
+    list.processes = (Veda_ProcessInfo*)calloc(count, sizeof(Veda_ProcessInfo));
     if (!list.processes) {
         CloseHandle(snapshot);
         return list;
@@ -36,7 +36,7 @@ ProcGuard_ProcessList CaptureProcessSnapshot() {
     if (Process32First(snapshot, &entry)) {
         int i = 0;
         do {
-            ProcGuard_ProcessInfo* info = &list.processes[i];
+            Veda_ProcessInfo* info = &list.processes[i];
             info->pid = entry.th32ProcessID;
             info->parent_pid = entry.th32ParentProcessID;
             
@@ -65,12 +65,12 @@ ProcGuard_ProcessList CaptureProcessSnapshot() {
     return list;
 }
 
-void FreeProcessSnapshot(ProcGuard_ProcessList list) {
+void FreeProcessSnapshot(Veda_ProcessList list) {
     if (list.processes) free(list.processes);
 }
 // GetProcessInfoByPID fetches high-precision info for a single PID without a full snapshot. 
-ProcGuard_ProcessInfo GetProcessInfoByPID(uint32_t pid) {
-    ProcGuard_ProcessInfo info = { 0 };
+Veda_ProcessInfo GetProcessInfoByPID(uint32_t pid) {
+    Veda_ProcessInfo info = { 0 };
     info.pid = pid;
     
     HANDLE hProc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);

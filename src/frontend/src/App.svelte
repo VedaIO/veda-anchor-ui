@@ -28,17 +28,17 @@ const routes: Record<string, ComponentType> = {
 import { checkExtension } from './lib/extensionStore';
 
 /**
- * Handle stopping the ProcGuard daemon completely
+ * Handle stopping the Veda daemon completely
  * This is different from just closing the window - it stops background monitoring
  */
 async function handleStop() {
-  if (confirm('Bạn có chắc chắn muốn dừng ProcGuard không?')) {
+  if (confirm('Bạn có chắc chắn muốn dừng Veda không?')) {
     try {
       await window.go.main.App.Shutdown();
-      alert('ProcGuard đã được dừng.');
+      alert('Veda đã được dừng.');
     } catch (error) {
-      console.error('Lỗi khi dừng ProcGuard:', error);
-      alert('Đã có lỗi xảy ra khi cố gắng dừng ProcGuard.');
+      console.error('Lỗi khi dừng Veda:', error);
+      alert('Đã có lỗi xảy ra khi cố gắng dừng Veda.');
     }
   }
 }
@@ -76,7 +76,7 @@ onMount(async () => {
           <a
             class="navbar-brand"
             href="/"
-            on:click|preventDefault={() => navigate('/')}>ProcGuard</a
+            on:click|preventDefault={() => navigate('/')}>Veda</a
           >
           <button
             class="navbar-toggler"
@@ -131,7 +131,7 @@ onMount(async () => {
             </ul>
             <div class="d-flex align-items-center">
               <button class="btn btn btn-danger" on:click={handleStop}>
-                Dừng ProcGuard
+                Dừng Veda
               </button>
               <button class="btn btn-outline-secondary" on:click={onLogout}>
                 Đăng xuất

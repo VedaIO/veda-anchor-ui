@@ -85,7 +85,7 @@ async function saveBlocklist(): Promise<void> {
     const a = document.createElement('a');
     a.style.display = 'none';
     a.href = url;
-    a.download = 'procguard_blocklist.json';
+    a.download = 'Veda_blocklist.json';
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);

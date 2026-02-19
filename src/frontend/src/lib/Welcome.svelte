@@ -52,7 +52,7 @@ onMount(() => {
   <!-- Welcome Jumbotron -->
   <div class="p-3 p-md-5 mb-4 bg-body-tertiary rounded-3">
     <div class="container-fluid py-3 py-md-5">
-      <h1 class="display-5 fw-bold text-dark">Chào mừng đến với ProcGuard</h1>
+      <h1 class="display-5 fw-bold text-dark">Chào mừng đến với Veda</h1>
       <p class="col-md-8 fs-4 text-dark">
         Đây là trung tâm điều khiển của bạn.<br />
         Từ đây, bạn có thể quản lý các ứng dụng và truy cập web được giám sát.

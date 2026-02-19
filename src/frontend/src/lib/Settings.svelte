@@ -73,7 +73,7 @@ onMount(() => {
             >
           </p>
           <p class="card-text">
-            Bật tùy chọn này để ProcGuard tự động chạy khi bạn đăng nhập vào
+            Bật tùy chọn này để Veda tự động chạy khi bạn đăng nhập vào
             Windows.
           </p>
           <button
@@ -117,11 +117,11 @@ onMount(() => {
       <!-- Uninstall Card -->
       <div class="card mb-4">
         <div class="card-header">
-          <h4>Gỡ cài đặt ProcGuard</h4>
+          <h4>Gỡ cài đặt Veda</h4>
         </div>
         <div class="card-body">
           <p class="card-text">
-            <b>Cảnh báo:</b> Thao tác này sẽ xóa toàn bộ dữ liệu và gỡ cài đặt ProcGuard
+            <b>Cảnh báo:</b> Thao tác này sẽ xóa toàn bộ dữ liệu và gỡ cài đặt Veda
             khỏi hệ thống.
           </p>
           <button
@@ -130,7 +130,7 @@ onMount(() => {
             on:click={() =>
               openConfirmModal('Xác nhận gỡ cài đặt', 'uninstall')}
           >
-            Gỡ cài đặt ProcGuard
+            Gỡ cài đặt Veda
           </button>
         </div>
       </div>

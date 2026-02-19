@@ -8,7 +8,7 @@
 #include <string.h>
 #include <wchar.h>
 
-ProcGuard_IconData* ExtractIconAsRGBA(const char* exePath) {
+Veda_IconData* ExtractIconAsRGBA(const char* exePath) {
     // Convert UTF-8 path to wide string
     int wlen = MultiByteToWideChar(CP_UTF8, 0, exePath, -1, NULL, 0);
     if (wlen == 0) {
@@ -100,7 +100,7 @@ ProcGuard_IconData* ExtractIconAsRGBA(const char* exePath) {
     DestroyIcon(hIcon);
 
     // Allocate and return result
-    ProcGuard_IconData* result = (ProcGuard_IconData*)malloc(sizeof(ProcGuard_IconData));
+    Veda_IconData* result = (Veda_IconData*)malloc(sizeof(Veda_IconData));
     if (!result) {
         free(pixels);
         return NULL;
@@ -113,7 +113,7 @@ ProcGuard_IconData* ExtractIconAsRGBA(const char* exePath) {
     return result;
 }
 
-void FreeIconData(ProcGuard_IconData* data) {
+void FreeIconData(Veda_IconData* data) {
     if (data) {
         if (data->pixels) {
             free(data->pixels);

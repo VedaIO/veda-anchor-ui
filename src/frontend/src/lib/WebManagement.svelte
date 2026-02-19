@@ -20,7 +20,7 @@ function showSubView(view: 'leaderboard' | 'log' | 'blocklist') {
           <h5 class="card-title">Đã mất kết nối với tiện ích mở rộng</h5>
           <p>
             Để sử dụng tính năng quản lý web, vui lòng đảm bảo tiện ích
-            ProcGuard đã được cài đặt và trình duyệt đang mở.
+            Veda đã được cài đặt và trình duyệt đang mở.
           </p>
           <p class="text-muted small">
             Nếu bạn vừa đóng trình duyệt, kết nối sẽ tự động được khôi phục khi
@@ -33,7 +33,7 @@ function showSubView(view: 'leaderboard' | 'log' | 'blocklist') {
             on:click={async () => {
               try {
                 await window.go.main.App.OpenBrowser(
-                  'https://chromewebstore.google.com/detail/procguard-web-monitor/hkanepohpflociaodcicmmfbdaohpceo'
+                  'https://chromewebstore.google.com/detail/Veda-web-monitor/hkanepohpflociaodcicmmfbdaohpceo'
                 );
               } catch (err) {
                 console.error('Failed to open browser:', err);
