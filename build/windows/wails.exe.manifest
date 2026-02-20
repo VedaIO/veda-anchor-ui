@@ -12,4 +12,11 @@
             <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">permonitorv2,permonitor</dpiAwareness> <!-- falls back to per-monitor if per-monitor v2 is not supported -->
         </asmv3:windowsSettings>
     </asmv3:application>
+    <asmv3:trustInfo>
+        <asmv3:security>
+            <asmv3:requestedPrivileges>
+                <asmv3:requestedExecutionLevel level="asInvoker" uiAccess="false"/>
+            </asmv3:requestedPrivileges>
+        </asmv3:security>
+    </asmv3:trustInfo>
 </assembly>
