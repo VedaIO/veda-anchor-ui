@@ -38,22 +38,13 @@ func main() {
 
 	app := NewApp()
 
-	// Check for --background flag to start hidden
-	startHidden := false
-	for _, arg := range os.Args {
-		if arg == "--background" {
-			startHidden = true
-			break
-		}
-	}
-
 	// Create and run the Wails application
 	err := wails.Run(&options.App{
 		Title:       "Veda",
 		Width:       1024,
 		Height:      768,
 		Frameless:   true,
-		StartHidden: startHidden,
+		StartHidden: false,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
