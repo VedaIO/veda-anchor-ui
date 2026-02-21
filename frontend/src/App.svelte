@@ -28,17 +28,17 @@ const routes: Record<string, ComponentType> = {
 import { checkExtension } from './lib/extensionStore';
 
 /**
- * Handle stopping the Veda daemon completely
+ * Handle stopping the Veda Anchor daemon completely
  * This is different from just closing the window - it stops background monitoring
  */
 async function handleStop() {
-  if (confirm('Bạn có chắc chắn muốn dừng Veda không?')) {
+  if (confirm('Bạn có chắc chắn muốn dừng Veda Anchor không?')) {
     try {
       await window.go.main.App.Shutdown();
-      alert('Veda đã được dừng.');
+      alert('Veda Anchor đã được dừng.');
     } catch (error) {
-      console.error('Lỗi khi dừng Veda:', error);
-      alert('Đã có lỗi xảy ra khi cố gắng dừng Veda.');
+      console.error('Lỗi khi dừng Veda Anchor:', error);
+      alert('Đã có lỗi xảy ra khi cố gắng dừng Veda Anchor.');
     }
   }
 }
@@ -76,7 +76,7 @@ onMount(async () => {
           <a
             class="navbar-brand"
             href="/"
-            on:click|preventDefault={() => navigate('/')}>Veda</a
+            on:click|preventDefault={() => navigate('/')}>Veda Anchor</a
           >
           <button
             class="navbar-toggler"
@@ -131,7 +131,7 @@ onMount(async () => {
             </ul>
             <div class="d-flex align-items-center">
               <button class="btn btn btn-danger" on:click={handleStop}>
-                Dừng Veda
+                Dừng Veda Anchor
               </button>
               <button class="btn btn-outline-secondary" on:click={onLogout}>
                 Đăng xuất

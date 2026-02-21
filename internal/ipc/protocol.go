@@ -20,5 +20,5 @@ type Response struct {
 
 // GetIPCAddress returns the Windows Named Pipe address.
 func GetIPCAddress() string {
-	return `\\.\pipe\veda`
+	return `\\.\pipe\veda-anchor`
 }

@@ -1,4 +1,4 @@
-# Makefile for Veda
+# Makefile for Veda Anchor UI
 
 # Use git describe to get a version string.
 # Example: v1.0.0-3-g1234567
@@ -9,11 +9,11 @@ VERSION ?= $(shell git describe --tags --always --dirty --first-parent 2>/dev/nu
 
 all: build
 build:
-	@echo "Building Veda for windows..."
+	@echo "Building Veda Anchor UI for windows..."
 	CGO_ENABLED=0 wails build -platform windows/amd64 -ldflags="-H=windowsgui -X main.version=$(VERSION)"
 
 build-debug:
-	@echo "Building Veda for windows (debug)..."
+	@echo "Building Veda Anchor UI for windows (debug)..."
 	CGO_ENABLED=0 wails build -platform windows/amd64 -ldflags="-X main.version=$(VERSION)"
 
 fmt:

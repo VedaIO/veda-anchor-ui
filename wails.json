@@ -1,7 +1,7 @@
 {
   "$schema": "https://wails.io/schemas/config.v2.json",
-  "name": "Veda",
-  "outputfilename": "veda-ui",
+  "name": "Veda Anchor UI",
+  "outputfilename": "veda-anchor-ui",
   "frontend:dir": "frontend",
   "frontend:install": "bun install",
   "frontend:build": "bun run build",
@@ -12,7 +12,7 @@
     "email": "vedaio@proton.me"
   },
   "info": {
-    "productName": "Veda",
+    "productName": "Veda Anchor UI",
     "companyName": "VedaIO",
     "copyright": "Copyright (c) 2026 VedaIO",
     "productVersion": "1.4.3"

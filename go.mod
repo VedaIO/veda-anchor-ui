@@ -1,4 +1,4 @@
-module veda-ui
+module veda-anchor-ui
 
 go 1.25.5
 

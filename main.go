@@ -24,23 +24,23 @@ func (a *App) startup(ctx context.Context) {
 func main() {
 	// CRITICAL: Log startup for debugging
 	cacheDir, _ := os.UserCacheDir()
-	logDir := filepath.Join(cacheDir, "Veda", "logs")
+	logDir := filepath.Join(cacheDir, "Veda Anchor", "logs")
 	_ = os.MkdirAll(logDir, 0755)
 
-	logPath := filepath.Join(logDir, "Veda_ui.log")
+	logPath := filepath.Join(logDir, "Veda-Anchor_UI.log")
 	logFile, _ := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if logFile != nil {
 		defer func() { _ = logFile.Close() }()
 		log.SetOutput(logFile)
 	}
 
-	log.Printf("=== VEDA UI LAUNCHED === Args: %v", os.Args)
+	log.Printf("=== VEDA ANCHOR UI LAUNCHED === Args: %v", os.Args)
 
 	app := NewApp()
 
 	// Create and run the Wails application
 	err := wails.Run(&options.App{
-		Title:       "Veda",
+		Title:       "Veda Anchor",
 		Width:       1024,
 		Height:      768,
 		Frameless:   true,
@@ -56,14 +56,14 @@ func main() {
 			WebviewIsTransparent:              false,
 			WindowIsTranslucent:               false,
 			DisableFramelessWindowDecorations: false,
-			WebviewUserDataPath:               filepath.Join(os.Getenv("LOCALAPPDATA"), "Veda", "webview"),
+			WebviewUserDataPath:               filepath.Join(os.Getenv("LOCALAPPDATA"), "Veda Anchor UI", "webview"),
 		},
 
 		HideWindowOnClose: true,
 
 		// SingleInstanceLock: Ensure only one GUI instance runs
 		SingleInstanceLock: &options.SingleInstanceLock{
-			UniqueId: "com.Veda.ui",
+			UniqueId: "com.vedaio.veda-anchor-ui",
 			OnSecondInstanceLaunch: func(data options.SecondInstanceData) {
 				log.Println("Second GUI instance detected - showing existing window")
 				app.ShowWindow()

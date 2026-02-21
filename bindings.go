@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"time"
 
-	"veda-ui/internal/ipc"
+	"veda-anchor-ui/internal/ipc"
 
 	wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -188,7 +188,7 @@ func (a *App) CheckChromeExtension() bool {
 	if err != nil {
 		return false
 	}
-	heartbeatPath := filepath.Join(cacheDir, "Veda", "extension_heartbeat")
+	heartbeatPath := filepath.Join(cacheDir, "Veda Anchor", "extension_heartbeat")
 	content, err := os.ReadFile(heartbeatPath)
 	if err != nil {
 		return false
