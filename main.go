@@ -23,8 +23,11 @@ func (a *App) startup(ctx context.Context) {
 
 func main() {
 	// CRITICAL: Log startup for debugging
-	cacheDir, _ := os.UserCacheDir()
-	logDir := filepath.Join(cacheDir, "VedaAnchor", "logs")
+	progData := os.Getenv("ProgramData")
+	if progData == "" {
+		progData = `C:\ProgramData`
+	}
+	logDir := filepath.Join(progData, "VedaAnchor", "logs")
 	_ = os.MkdirAll(logDir, 0755)
 
 	logPath := filepath.Join(logDir, "veda-anchor_ui.log")

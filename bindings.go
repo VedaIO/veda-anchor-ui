@@ -184,11 +184,11 @@ func (a *App) ClearWebHistory(password string) error {
 // --- Local Methods (UI-side only) ---
 
 func (a *App) CheckChromeExtension() bool {
-	cacheDir, err := os.UserCacheDir()
-	if err != nil {
-		return false
+	progData := os.Getenv("ProgramData")
+	if progData == "" {
+		progData = `C:\ProgramData`
 	}
-	heartbeatPath := filepath.Join(cacheDir, "VedaAnchor", "extension_heartbeat")
+	heartbeatPath := filepath.Join(progData, "VedaAnchor", "extension_heartbeat")
 	content, err := os.ReadFile(heartbeatPath)
 	if err != nil {
 		return false
