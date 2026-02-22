@@ -1,6 +1,6 @@
-# Veda Anchor Engine
+# Veda Anchor UI
 
-The engine that powers [VedaAnchor](https://github.com/VedaIO/veda-anchor)
+The user interface for [VedaAnchor](https://github.com/VedaIO/veda-anchor)
 
 # Build
 
