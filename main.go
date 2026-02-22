@@ -27,20 +27,20 @@ func main() {
 	logDir := filepath.Join(cacheDir, "VedaAnchor", "logs")
 	_ = os.MkdirAll(logDir, 0755)
 
-	logPath := filepath.Join(logDir, "Veda-Anchor_UI.log")
+	logPath := filepath.Join(logDir, "veda-anchor_ui.log")
 	logFile, _ := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if logFile != nil {
 		defer func() { _ = logFile.Close() }()
 		log.SetOutput(logFile)
 	}
 
-	log.Printf("=== VEDA ANCHOR UI LAUNCHED === Args: %v", os.Args)
+	log.Printf("=== ANCHOR UI LAUNCHED === Args: %v", os.Args)
 
 	app := NewApp()
 
 	// Create and run the Wails application
 	err := wails.Run(&options.App{
-		Title:       "Veda Anchor",
+		Title:       "VedaAnchor",
 		Width:       1024,
 		Height:      768,
 		Frameless:   true,
@@ -56,7 +56,7 @@ func main() {
 			WebviewIsTransparent:              false,
 			WindowIsTranslucent:               false,
 			DisableFramelessWindowDecorations: false,
-			WebviewUserDataPath:               filepath.Join(os.Getenv("LOCALAPPDATA"), "Veda Anchor UI", "webview"),
+			WebviewUserDataPath:               filepath.Join(os.Getenv("LOCALAPPDATA"), "VedaAnchorUI", "webview"),
 		},
 
 		HideWindowOnClose: true,
