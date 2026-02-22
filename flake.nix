@@ -1,21 +1,24 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs-master.url = "github:NixOS/nixpkgs/master";
   };
   outputs = {
     self,
     nixpkgs,
+    nixpkgs-master,
   }: let
     system = "x86_64-linux"; # or "aarch64-darwin" for M1/M2 Macs
     pkgs = import nixpkgs {inherit system;};
+    master-pkgs = import nixpkgs-master {inherit system;};
   in {
     devShells.${system}.default = pkgs.mkShell {
-      buildInputs = with pkgs; [
-        go
-        golangci-lint
-        gnumake
-        bun
-        biome
+      buildInputs = [
+        master-pkgs.go_1_26
+        master-pkgs.golangci-lint
+        pkgs.gnumake
+        pkgs.bun
+        pkgs.biome
       ];
       shellHook = ''
         go env -w GOPATH=$HOME/.local/share/go
