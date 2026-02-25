@@ -62,8 +62,6 @@ func main() {
 			WebviewUserDataPath:               filepath.Join(os.Getenv("LOCALAPPDATA"), "VedaAnchorUI", "webview"),
 		},
 
-		HideWindowOnClose: true,
-
 		// SingleInstanceLock: Ensure only one GUI instance runs
 		SingleInstanceLock: &options.SingleInstanceLock{
 			UniqueId: "com.vedaio.veda-anchor-ui",
