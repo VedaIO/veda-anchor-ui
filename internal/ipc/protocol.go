@@ -18,7 +18,7 @@ type Response struct {
 	Error  string          `json:"error,omitempty"`
 }
 
-// GetIPCAddress returns the Windows Named Pipe address.
+// GetIPCAddress returns the Windows Named Pipe address for Agent.
 func GetIPCAddress() string {
-	return `\\.\pipe\veda-anchor`
+	return `\\.\pipe\veda-anchor-agent`
 }
