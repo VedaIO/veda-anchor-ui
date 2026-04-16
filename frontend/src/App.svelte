@@ -55,8 +55,18 @@ onMount(async () => {
   // Check extension status (starts polling automatically)
   checkExtension();
 
-  // Check if user is authenticated
-  const authenticated = await window.go.main.App.GetIsAuthenticated();
+  // Retry auth check — agent may not be ready immediately
+  let authenticated = false;
+  for (let i = 0; i < 3; i++) {
+    try {
+      authenticated = await window.go.main.App.GetIsAuthenticated();
+      break;
+    } catch (error) {
+      console.error(`Auth check failed (attempt ${i + 1}/3):`, error);
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  }
+
   isAuthenticated.set(authenticated);
 
   // Redirect to login if not authenticated

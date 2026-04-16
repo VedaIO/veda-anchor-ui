@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"time"
 
 	"github.com/Microsoft/go-winio"
 	"github.com/google/uuid"
@@ -32,10 +33,21 @@ func (c *Client) connect() error {
 		return nil
 	}
 
-	conn, err := winio.DialPipe(c.address, nil)
-	if err != nil {
-		return err
+	// Retry connection — the agent pipe may not be ready yet at UI startup
+	var conn net.Conn
+	var err error
+	for i := 0; i < 15; i++ {
+		timeout := 2 * time.Second
+		conn, err = winio.DialPipe(c.address, &timeout)
+		if err == nil {
+			break
+		}
+		time.Sleep(1 * time.Second)
 	}
+	if err != nil {
+		return fmt.Errorf("failed to connect to agent after retries: %w", err)
+	}
+
 	c.conn = conn
 	return nil
 }
