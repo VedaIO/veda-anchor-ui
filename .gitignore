@@ -4,6 +4,7 @@ build.log
 dist/
 build/bin
 frontend/dist/
+C:\\ProgramData/
 
 # IDE
 .idea/
