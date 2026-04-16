@@ -35,11 +35,11 @@ async function handleStop() {
   if (confirm('Bạn có chắc chắn muốn dừng Veda Anchor không?')) {
     try {
       await window.go.main.App.Shutdown();
-      alert('Veda Anchor đã được dừng.');
     } catch (error) {
       console.error('Lỗi khi dừng Veda Anchor:', error);
-      alert('Đã có lỗi xảy ra khi cố gắng dừng Veda Anchor.');
     }
+    // Quit UI regardless — the engine is shutting down
+    window.runtime.Quit();
   }
 }
 
