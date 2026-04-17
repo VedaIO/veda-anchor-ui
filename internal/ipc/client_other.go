@@ -17,6 +17,6 @@ func NewClient() *Client {
 	}
 }
 
-func (c *Client) Request(method string, params interface{}) (json.RawMessage, error) {
+func (c *Client) Request(method string, params any) (json.RawMessage, error) {
 	return nil, fmt.Errorf("IPC client is only supported on Windows")
 }

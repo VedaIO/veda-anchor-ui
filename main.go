@@ -71,7 +71,7 @@ func main() {
 			},
 		},
 
-		Bind: []interface{}{
+		Bind: []any{
 			app,
 		},
 	})

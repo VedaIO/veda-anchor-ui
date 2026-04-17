@@ -36,50 +36,54 @@ func unmarshalResult[T any](raw json.RawMessage) (T, error) {
 	return v, err
 }
 
-func (a *App) callVoid(method string, params interface{}) error {
+func (a *App) callVoid(method string, params any) error {
 	_, err := a.ipcClient.Request(method, params)
 	return err
 }
 
-func (a *App) callResult(method string, params interface{}) (interface{}, error) {
+func (a *App) callResult(method string, params any) (any, error) {
 	res, err := a.ipcClient.Request(method, params)
 	if err != nil {
 		return nil, err
 	}
-	var data interface{}
+	var data any
 	err = json.Unmarshal(res, &data)
 	return data, err
 }
 
 // --- Stats ---
 
-func (a *App) GetAppLeaderboard(since, until string) (interface{}, error) {
+func (a *App) GetAppLeaderboard(since, until string) (any, error) {
 	return a.callResult("GetAppLeaderboard", map[string]string{"since": since, "until": until})
 }
 
-func (a *App) GetScreenTime() (interface{}, error) {
+func (a *App) GetScreenTime() (any, error) {
 	return a.callResult("GetScreenTime", nil)
 }
 
-func (a *App) GetTotalScreenTime() (interface{}, error) {
+func (a *App) GetTotalScreenTime() (any, error) {
 	return a.callResult("GetTotalScreenTime", nil)
 }
 
-func (a *App) GetWebLeaderboard(since, until string) (interface{}, error) {
+func (a *App) GetWebLeaderboard(since, until string) (any, error) {
 	return a.callResult("GetWebLeaderboard", map[string]string{"since": since, "until": until})
 }
 
-func (a *App) Search(query, since, until string) (interface{}, error) {
+func (a *App) Search(query, since, until string) (any, error) {
 	return a.callResult("Search", map[string]string{"query": query, "since": since, "until": until})
 }
 
-func (a *App) GetWebLogs(query, since, until string) (interface{}, error) {
+func (a *App) GetWebLogs(query, since, until string) (any, error) {
 	return a.callResult("GetWebLogs", map[string]string{"query": query, "since": since, "until": until})
+}
+
+func (a *App) GetAppDetails(exePath string) (any, error) {
+	return a.callResult("GetAppDetails", map[string]string{"exePath": exePath})
 }
 
 // --- App Blocklist ---
 
-func (a *App) GetAppBlocklist() (interface{}, error) {
+func (a *App) GetAppBlocklist() (any, error) {
 	return a.callResult("GetAppBlocklist", nil)
 }
 
@@ -95,7 +99,7 @@ func (a *App) ClearAppBlocklist() error {
 	return a.callVoid("ClearAppBlocklist", nil)
 }
 
-func (a *App) SaveAppBlocklist() (interface{}, error) {
+func (a *App) SaveAppBlocklist() (any, error) {
 	return a.callResult("SaveAppBlocklist", nil)
 }
 
@@ -105,7 +109,7 @@ func (a *App) LoadAppBlocklist(content []byte) error {
 
 // --- Web Blocklist ---
 
-func (a *App) GetWebBlocklist() (interface{}, error) {
+func (a *App) GetWebBlocklist() (any, error) {
 	return a.callResult("GetWebBlocklist", nil)
 }
 
@@ -121,7 +125,7 @@ func (a *App) ClearWebBlocklist() error {
 	return a.callVoid("ClearWebBlocklist", nil)
 }
 
-func (a *App) SaveWebBlocklist() (interface{}, error) {
+func (a *App) SaveWebBlocklist() (any, error) {
 	return a.callResult("SaveWebBlocklist", nil)
 }
 
@@ -131,7 +135,7 @@ func (a *App) LoadWebBlocklist(content []byte) error {
 
 // --- Auth ---
 
-func (a *App) GetIsAuthenticated() (interface{}, error) {
+func (a *App) GetIsAuthenticated() (any, error) {
 	return a.callResult("GetIsAuthenticated", nil)
 }
 
@@ -139,11 +143,11 @@ func (a *App) Logout() error {
 	return a.callVoid("Logout", nil)
 }
 
-func (a *App) HasPassword() (interface{}, error) {
+func (a *App) HasPassword() (any, error) {
 	return a.callResult("HasPassword", nil)
 }
 
-func (a *App) Login(password string) (interface{}, error) {
+func (a *App) Login(password string) (any, error) {
 	return a.callResult("Login", map[string]string{"password": password})
 }
 
@@ -161,7 +165,7 @@ func (a *App) Uninstall(password string) error {
 	return a.callVoid("Uninstall", map[string]string{"password": password})
 }
 
-func (a *App) GetAutostartStatus() (interface{}, error) {
+func (a *App) GetAutostartStatus() (any, error) {
 	return a.callResult("GetAutostartStatus", nil)
 }
 
